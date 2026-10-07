@@ -84,3 +84,4 @@ The top scenario bar in the dashboard allows you to inject real-world D2C challe
 4. **Margin Compression Alert:** An uncoordinated discount code cuts Net Contribution Margin below the 15% floor. ASCEND detects unit economics erosion.
 5. **Run Autonomous Cycle:** Executes the neuro-symbolic reasoning loop, auto-executing Tier 1 adjustments and populating the Decision Inbox.
 # ascend
+# ascend
