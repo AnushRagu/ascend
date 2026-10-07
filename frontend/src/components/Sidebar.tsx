@@ -40,17 +40,22 @@ export default function Sidebar({
   return (
     <aside className="w-64 sm:w-72 flex-shrink-0 flex flex-col justify-between p-4 sm:p-5 select-none transition-all border-r border-purple-500/15 dark:border-white/[0.08] bg-white/70 dark:bg-[#060609]/95 backdrop-blur-xl overflow-y-auto">
       <div className="space-y-5">
-        {/* Brand Header: Just ASCEND */}
-        <div className="px-2 pt-1 flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-700 via-purple-600 to-violet-400 flex items-center justify-center shadow-lg shadow-purple-500/30 border border-white/20 flex-shrink-0">
+        {/* Brand Header: Just ASCEND linking to Landing */}
+        <a
+          href="/landing"
+          title="View Ascend Landing Page"
+          className="px-2 pt-1 flex items-center space-x-3 group cursor-pointer hover:opacity-90 transition"
+        >
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-700 via-purple-600 to-violet-400 flex items-center justify-center shadow-lg shadow-purple-500/30 border border-white/20 flex-shrink-0 group-hover:scale-105 transition-transform">
             <span className="text-white font-black text-sm tracking-tighter">▲</span>
           </div>
           <div>
-            <div className="font-bold text-base tracking-[0.25em] text-slate-900 dark:text-white uppercase">
-              ASCEND
+            <div className="font-bold text-base tracking-[0.25em] text-slate-900 dark:text-white uppercase flex items-center gap-1.5">
+              <span>ASCEND</span>
+              <span className="text-[10px] opacity-40 group-hover:opacity-100 transition-opacity">↗</span>
             </div>
           </div>
-        </div>
+        </a>
 
         {/* Navigation Menu */}
         <nav className="space-y-1.5 text-xs font-semibold">

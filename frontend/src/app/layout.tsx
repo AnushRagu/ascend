@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./liquid-glass.css";
+import "./landing.css";
 
 export const metadata: Metadata = {
   title: "ASCEND — Autonomous Cross-Channel Intelligence & Decision Engine",
