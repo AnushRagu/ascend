@@ -104,66 +104,70 @@ export default function ScenarioBar({ onRefresh, killSwitchActive, onKillSwitchC
   };
 
   return (
-    <div className="netic-card console-controls p-4 space-y-3">
+    <div className="liquid-glass-card p-4 space-y-3.5 border border-purple-500/15">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center space-x-2">
-          <div className="w-7 h-7 rounded-lg bg-[#f5f3ff] text-[#635bff] flex items-center justify-center">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-8 h-8 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center shadow-inner">
             <Sparkles className="w-4 h-4" />
           </div>
-          <span className="text-xs font-bold tracking-wider uppercase text-slate-700 dark:text-slate-300">
-            D2C Telemetry Scenario Simulator & Autonomy Engine
-          </span>
+          <div>
+            <span className="text-[11px] font-black tracking-wider uppercase text-slate-800 dark:text-purple-100">
+              D2C Telemetry Scenario Simulator & Autonomy Engine
+            </span>
+            <div className="text-[10px] text-slate-400 dark:text-purple-300/50">Deterministic sandbox for stress testing autonomy policies</div>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Fast-forward simulator button */}
-          <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-1 text-xs">
-            <FastForward className="w-3.5 h-3.5 text-slate-500" />
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Fast-forward simulator segmented pills */}
+          <div className="liquid-pill-track flex items-center">
+            <div className="flex items-center px-1.5 text-purple-400/60">
+              <FastForward className="w-3.5 h-3.5" />
+            </div>
             <button
               onClick={() => handleFastForward(24)}
               disabled={loading !== null}
-              className="text-slate-600 dark:text-slate-300 font-semibold hover:text-[#635bff] px-1"
+              className="liquid-pill-btn hover:text-purple-300"
             >
-              +24h
+              {loading === "FF_24" ? "..." : "+24h"}
             </button>
-            <span className="text-slate-300">|</span>
             <button
               onClick={() => handleFastForward(72)}
               disabled={loading !== null}
-              className="text-slate-600 dark:text-slate-300 font-semibold hover:text-[#635bff] px-1"
+              className="liquid-pill-btn hover:text-purple-300"
             >
-              +72h
+              {loading === "FF_72" ? "..." : "+72h"}
             </button>
           </div>
 
           {/* Global Kill Switch */}
           <button
             onClick={handleToggleKillSwitch}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition ${
+            className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition interactive-button ${
               killSwitchActive
-                ? "bg-[#ffe4e6] text-[#e11d48] border border-[#fecdd3] animate-pulse"
-                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                ? "bg-purple-950 text-purple-200 border border-purple-500/60 shadow-lg shadow-purple-500/30 animate-pulse"
+                : "bg-purple-500/05 dark:bg-[#07070a] text-slate-600 dark:text-purple-300/80 border border-purple-500/15 hover:bg-purple-500/10"
             }`}
           >
-            {killSwitchActive ? <ShieldAlert className="w-3.5 h-3.5 text-rose-500" /> : <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />}
-            <span>{killSwitchActive ? "KILL SWITCH: ON" : "KILL SWITCH: OFF"}</span>
+            {killSwitchActive ? <ShieldAlert className="w-3.5 h-3.5 text-purple-400" /> : <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />}
+            <span>{killSwitchActive ? "KILL SWITCH: ENGAGED" : "KILL SWITCH: OFF"}</span>
           </button>
 
           {/* Trigger Decision Engine */}
           <button
             onClick={handleRunCycle}
             disabled={loading !== null}
-            className="flex items-center space-x-1.5 px-4 py-1.5 rounded-full text-xs font-bold bg-[#635bff] hover:bg-[#5248e8] text-white transition shadow-sm"
+            className="flex items-center space-x-1.5 px-4 py-1.5 rounded-xl text-xs font-bold liquid-btn-primary transition disabled:opacity-60 interactive-button"
           >
-            <Zap className="w-3.5 h-3.5" />
-            <span>{loading === "CYCLE" ? "Executing..." : "Run Autonomous Cycle"}</span>
+            <Zap className="w-3.5 h-3.5 text-purple-200" />
+            <span>{loading === "CYCLE" ? "Executing cycle..." : "Run Autonomous Cycle"}</span>
           </button>
 
           {/* Reset Baseline */}
           <button
             onClick={handleReseed}
             disabled={loading !== null}
-            className="flex items-center space-x-1 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition"
+            className="flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-purple-500/05 dark:bg-[#07070a] border border-purple-500/15 hover:bg-purple-500/10 text-slate-600 dark:text-purple-300/80 transition interactive-button"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset</span>
@@ -172,22 +176,22 @@ export default function ScenarioBar({ onRefresh, killSwitchActive, onKillSwitchC
       </div>
 
       {/* Scenario Action Buttons */}
-      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-        <span className="text-slate-400 mr-1 font-medium text-[11px]">Inject Event:</span>
+      <div className="flex flex-wrap items-center gap-2 pt-2.5 border-t border-purple-500/15 text-xs">
+        <span className="text-purple-400/80 mr-1 font-semibold text-[11px] tracking-wider uppercase">Inject Event:</span>
 
         <button
           onClick={() => handleScenario("STOCKOUT", "Hero SKU Stockout Threat")}
           disabled={loading !== null}
-          className="px-3 py-1 rounded-full bg-[#ffedd5] hover:bg-[#fed7aa] text-[#c2410c] font-semibold transition flex items-center space-x-1"
+          className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 font-bold transition flex items-center space-x-1 interactive-button"
         >
-          <AlertTriangle className="w-3 h-3" />
+          <AlertTriangle className="w-3 h-3 text-purple-400" />
           <span>1. Stockout Danger</span>
         </button>
 
         <button
           onClick={() => handleScenario("FATIGUE", "Creative Fatigue & CPM Spike")}
           disabled={loading !== null}
-          className="px-3 py-1 rounded-full bg-[#ffe4e6] hover:bg-[#fecdd3] text-[#be123c] font-semibold transition"
+          className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 font-bold transition interactive-button"
         >
           2. Meta Fatigue
         </button>
@@ -195,7 +199,7 @@ export default function ScenarioBar({ onRefresh, killSwitchActive, onKillSwitchC
         <button
           onClick={() => handleScenario("ARBITRAGE", "Cross-Channel Arbitrage")}
           disabled={loading !== null}
-          className="px-3 py-1 rounded-full bg-[#dcfce7] hover:bg-[#bbf7d0] text-[#15803d] font-semibold transition"
+          className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 font-bold transition interactive-button"
         >
           3. ROAS Arbitrage
         </button>
@@ -203,26 +207,31 @@ export default function ScenarioBar({ onRefresh, killSwitchActive, onKillSwitchC
         <button
           onClick={() => handleScenario("MARGIN_COMPRESSION", "Discount Margin Cannibalization")}
           disabled={loading !== null}
-          className="px-3 py-1 rounded-full bg-[#f3e8ff] hover:bg-[#e9d5ff] text-[#7e22ce] font-semibold transition"
+          className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 font-bold transition interactive-button"
         >
           4. Margin Compression
         </button>
       </div>
 
-      {/* Cycle Stage Progress Badges */}
+      {/* Cycle Stage Progress Badges with Animated Pipeline Flow */}
       {cycleLog && cycleLog.length > 0 && (
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-            Autonomous Pipeline Lifecycle Execution:
+        <div className="pt-2.5 border-t border-purple-500/15 animate-fade-in">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider flex items-center space-x-1.5">
+              <span className="live-glow-dot bg-purple-400" />
+              <span>Autonomous Pipeline Lifecycle Execution ({cycleLog.length} stages)</span>
+            </span>
+            <span className="text-[10px] font-mono text-purple-300 font-bold">100% Deterministic</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {cycleLog.map((s: any, idx: number) => (
               <span
                 key={idx}
-                className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-mono font-medium bg-purple-500/10 border border-purple-500/20 text-purple-200 transition-all duration-300 hover:border-purple-400"
               >
-                <CheckCircle2 className="w-3 h-3 text-emerald-500 mr-1" />
-                {s.stage}: {s.detail}
+                <CheckCircle2 className="w-3 h-3 text-purple-400 mr-1.5 flex-shrink-0" />
+                <span className="font-bold text-white mr-1">{s.stage}:</span>
+                <span className="text-purple-300/70">{s.detail}</span>
               </span>
             ))}
           </div>
@@ -230,7 +239,7 @@ export default function ScenarioBar({ onRefresh, killSwitchActive, onKillSwitchC
       )}
 
       {message && (
-        <div className="text-xs px-3.5 py-2 rounded-xl bg-[#f5f3ff] border border-[#e2dcff] text-[#635bff] flex items-center justify-between">
+        <div className="text-xs px-3.5 py-2.5 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-200 flex items-center justify-between font-medium animate-fade-in">
           <span>{message}</span>
         </div>
       )}

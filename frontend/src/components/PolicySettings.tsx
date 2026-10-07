@@ -42,29 +42,29 @@ export default function PolicySettings({ policies, onRefresh }: PolicySettingsPr
   return (
     <div className="max-w-4xl space-y-6">
       <div>
-        <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center space-x-2">
-          <Shield className="w-5 h-5 text-[#635bff]" />
+        <h3 className="text-base font-bold text-slate-800 dark:text-purple-100 flex items-center space-x-2">
+          <Shield className="w-5 h-5 text-purple-400" />
           <span>Configurable 3-Tier Autonomy & Policy Guardrails</span>
         </h3>
-        <p className="text-xs text-slate-400 mt-0.5">
+        <p className="text-xs text-slate-400 dark:text-purple-300/50 mt-0.5">
           Define mathematical boundaries and safety ceilings that govern which decisions ASCEND can execute autonomously vs which require operator approval.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Tier 1 & 2 Autonomy Thresholds */}
-        <div className="netic-card p-6 space-y-4">
-          <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
-            <Sliders className="w-3.5 h-3.5 text-[#635bff]" />
+        <div className="liquid-glass-card p-6 space-y-4 border border-purple-500/15">
+          <h4 className="text-xs font-bold text-slate-700 dark:text-purple-200 uppercase tracking-wider flex items-center space-x-1.5">
+            <Sliders className="w-3.5 h-3.5 text-purple-400" />
             <span>Autonomy Tier Boundaries</span>
           </h4>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">
+              <label className="text-xs text-slate-700 dark:text-purple-200 font-semibold block">
                 Tier 1 Max Budget Delta % (Fully Autonomous)
               </label>
-              <p className="text-[11px] text-slate-400 mb-2">
+              <p className="text-[11px] text-slate-400 dark:text-purple-300/50 mb-2">
                 Maximum % budget increase/decrease ASCEND may execute autonomously without human review.
               </p>
               <div className="flex items-center space-x-2">
@@ -75,17 +75,17 @@ export default function PolicySettings({ policies, onRefresh }: PolicySettingsPr
                   max="50"
                   value={formData.tier1_max_budget_delta_pct}
                   onChange={(e) => setFormData({ ...formData, tier1_max_budget_delta_pct: parseFloat(e.target.value) })}
-                  className="w-24 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-white font-mono"
+                  className="w-24 px-3 py-1.5 bg-purple-500/05 dark:bg-[#07070a] border border-purple-500/20 rounded-xl text-sm text-slate-800 dark:text-purple-100 font-mono focus:border-purple-400 outline-none"
                 />
-                <span className="text-xs text-slate-400">% per 24 hours</span>
+                <span className="text-xs text-slate-400 dark:text-purple-300/60">% per 24 hours</span>
               </div>
             </div>
 
             <div>
-              <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">
+              <label className="text-xs text-slate-700 dark:text-purple-200 font-semibold block">
                 Tier 1 Min AI Confidence Score
               </label>
-              <p className="text-[11px] text-slate-400 mb-2">
+              <p className="text-[11px] text-slate-400 dark:text-purple-300/50 mb-2">
                 Decisions with confidence below this threshold cannot auto-execute and are routed to review.
               </p>
               <div className="flex items-center space-x-2">
@@ -96,17 +96,17 @@ export default function PolicySettings({ policies, onRefresh }: PolicySettingsPr
                   max="1.0"
                   value={formData.tier1_min_confidence_score}
                   onChange={(e) => setFormData({ ...formData, tier1_min_confidence_score: parseFloat(e.target.value) })}
-                  className="w-24 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-white font-mono"
+                  className="w-24 px-3 py-1.5 bg-purple-500/05 dark:bg-[#07070a] border border-purple-500/20 rounded-xl text-sm text-slate-800 dark:text-purple-100 font-mono focus:border-purple-400 outline-none"
                 />
-                <span className="text-xs text-slate-400">({Math.round(formData.tier1_min_confidence_score * 100)}% minimum)</span>
+                <span className="text-xs text-slate-400 dark:text-purple-300/60">({Math.round(formData.tier1_min_confidence_score * 100)}% minimum)</span>
               </div>
             </div>
 
             <div>
-              <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">
+              <label className="text-xs text-slate-700 dark:text-purple-200 font-semibold block">
                 Tier 2 Max Budget Delta % (1-Click Approval)
               </label>
-              <p className="text-[11px] text-slate-400 mb-2">
+              <p className="text-[11px] text-slate-400 dark:text-purple-300/50 mb-2">
                 Changes larger than this ceiling are classified as Tier 3 Mandatory Escalation.
               </p>
               <div className="flex items-center space-x-2">
@@ -117,17 +117,17 @@ export default function PolicySettings({ policies, onRefresh }: PolicySettingsPr
                   max="100"
                   value={formData.tier2_max_budget_delta_pct}
                   onChange={(e) => setFormData({ ...formData, tier2_max_budget_delta_pct: parseFloat(e.target.value) })}
-                  className="w-24 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-white font-mono"
+                  className="w-24 px-3 py-1.5 bg-purple-500/05 dark:bg-[#07070a] border border-purple-500/20 rounded-xl text-sm text-slate-800 dark:text-purple-100 font-mono focus:border-purple-400 outline-none"
                 />
-                <span className="text-xs text-slate-400">% shift</span>
+                <span className="text-xs text-slate-400 dark:text-purple-300/60">% shift</span>
               </div>
             </div>
 
             <div>
-              <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">
+              <label className="text-xs text-slate-700 dark:text-purple-200 font-semibold block">
                 Campaign Cooldown Period
               </label>
-              <p className="text-[11px] text-slate-400 mb-2">
+              <p className="text-[11px] text-slate-400 dark:text-purple-300/50 mb-2">
                 Hours required between edits to prevent ad network learning phase reset thrashing.
               </p>
               <div className="flex items-center space-x-2">
@@ -138,27 +138,27 @@ export default function PolicySettings({ policies, onRefresh }: PolicySettingsPr
                   max="72"
                   value={formData.cooldown_hours}
                   onChange={(e) => setFormData({ ...formData, cooldown_hours: parseInt(e.target.value) })}
-                  className="w-24 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-white font-mono"
+                  className="w-24 px-3 py-1.5 bg-purple-500/05 dark:bg-[#07070a] border border-purple-500/20 rounded-xl text-sm text-slate-800 dark:text-purple-100 font-mono focus:border-purple-400 outline-none"
                 />
-                <span className="text-xs text-slate-400">hours</span>
+                <span className="text-xs text-slate-400 dark:text-purple-300/60">hours</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Safety Floors & Automatic Rollback */}
-        <div className="netic-card p-6 space-y-4">
-          <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
-            <ShieldAlert className="w-3.5 h-3.5 text-rose-500" />
+        <div className="liquid-glass-card p-6 space-y-4 border border-purple-500/15">
+          <h4 className="text-xs font-bold text-slate-700 dark:text-purple-200 uppercase tracking-wider flex items-center space-x-1.5">
+            <ShieldAlert className="w-3.5 h-3.5 text-purple-400" />
             <span>Safety Floors & Automated Watchdog Reversibility</span>
           </h4>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">
+              <label className="text-xs text-slate-700 dark:text-purple-200 font-semibold block">
                 Contribution Margin Floor %
               </label>
-              <p className="text-[11px] text-slate-400 mb-2">
+              <p className="text-[11px] text-slate-400 dark:text-purple-300/50 mb-2">
                 Prevents scaling ad spend on products if net contribution margin falls below this floor.
               </p>
               <div className="flex items-center space-x-2">
@@ -169,17 +169,17 @@ export default function PolicySettings({ policies, onRefresh }: PolicySettingsPr
                   max="0.5"
                   value={formData.min_contribution_margin_floor}
                   onChange={(e) => setFormData({ ...formData, min_contribution_margin_floor: parseFloat(e.target.value) })}
-                  className="w-24 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-white font-mono"
+                  className="w-24 px-3 py-1.5 bg-purple-500/05 dark:bg-[#07070a] border border-purple-500/20 rounded-xl text-sm text-slate-800 dark:text-purple-100 font-mono focus:border-purple-400 outline-none"
                 />
-                <span className="text-xs text-slate-400">({Math.round(formData.min_contribution_margin_floor * 100)}% net margin)</span>
+                <span className="text-xs text-slate-400 dark:text-purple-300/60">({Math.round(formData.min_contribution_margin_floor * 100)}% net margin)</span>
               </div>
             </div>
 
             <div>
-              <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">
+              <label className="text-xs text-slate-700 dark:text-purple-200 font-semibold block">
                 Inventory Stockout Buffer Days
               </label>
-              <p className="text-[11px] text-slate-400 mb-2">
+              <p className="text-[11px] text-slate-400 dark:text-purple-300/50 mb-2">
                 If inventory runout drops below this number of days, ad spend is locked and throttled.
               </p>
               <div className="flex items-center space-x-2">
@@ -190,17 +190,17 @@ export default function PolicySettings({ policies, onRefresh }: PolicySettingsPr
                   max="30"
                   value={formData.min_inventory_days_buffer}
                   onChange={(e) => setFormData({ ...formData, min_inventory_days_buffer: parseInt(e.target.value) })}
-                  className="w-24 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-white font-mono"
+                  className="w-24 px-3 py-1.5 bg-purple-500/05 dark:bg-[#07070a] border border-purple-500/20 rounded-xl text-sm text-slate-800 dark:text-purple-100 font-mono focus:border-purple-400 outline-none"
                 />
-                <span className="text-xs text-slate-400">days of stock</span>
+                <span className="text-xs text-slate-400 dark:text-purple-300/60">days of stock</span>
               </div>
             </div>
 
             <div>
-              <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">
+              <label className="text-xs text-slate-700 dark:text-purple-200 font-semibold block">
                 Automatic Rollback Drop Threshold %
               </label>
-              <p className="text-[11px] text-slate-400 mb-2">
+              <p className="text-[11px] text-slate-400 dark:text-purple-300/50 mb-2">
                 Safety watchdog automatically rolls back ad mutations if ROAS/MER degrades by this % in 6-24h.
               </p>
               <div className="flex items-center space-x-2">
@@ -211,9 +211,9 @@ export default function PolicySettings({ policies, onRefresh }: PolicySettingsPr
                   max="40"
                   value={formData.auto_rollback_drop_pct}
                   onChange={(e) => setFormData({ ...formData, auto_rollback_drop_pct: parseFloat(e.target.value) })}
-                  className="w-24 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-white font-mono"
+                  className="w-24 px-3 py-1.5 bg-purple-500/05 dark:bg-[#07070a] border border-purple-500/20 rounded-xl text-sm text-slate-800 dark:text-purple-100 font-mono focus:border-purple-400 outline-none"
                 />
-                <span className="text-xs text-slate-400">% drop triggers auto-reversion</span>
+                <span className="text-xs text-slate-400 dark:text-purple-300/60">% drop triggers auto-reversion</span>
               </div>
             </div>
           </div>
@@ -223,15 +223,15 @@ export default function PolicySettings({ policies, onRefresh }: PolicySettingsPr
           <button
             type="submit"
             disabled={saving}
-            className="flex items-center space-x-1.5 px-6 py-2.5 rounded-full text-xs font-bold bg-[#635bff] hover:bg-[#5248e8] text-white transition shadow-md shadow-indigo-500/25"
+            className="flex items-center space-x-1.5 px-6 py-2.5 rounded-xl text-xs font-bold liquid-btn-primary transition interactive-button"
           >
             <Save className="w-4 h-4" />
             <span>{saving ? "Saving Guardrails..." : "Save Policy Guardrails"}</span>
           </button>
 
           {success && (
-            <span className="text-xs text-emerald-600 font-medium flex items-center space-x-1">
-              <Check className="w-4 h-4" />
+            <span className="text-xs text-purple-300 font-medium flex items-center space-x-1">
+              <Check className="w-4 h-4 text-purple-400" />
               <span>Policies updated and applied to decision engine.</span>
             </span>
           )}

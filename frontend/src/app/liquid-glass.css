@@ -1,0 +1,280 @@
+/* =========================================================================
+   ASCEND — LIQUID GLASS THEME LAYER
+   Loaded after globals.css. Restyles existing components only (no logic).
+   ========================================================================= */
+
+:root {
+  --lg-font: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  /* graph tokens (light) */
+  --g-line: #1d1d24;
+  --g-line-2: #7a7a90;
+  --g-line-3: #a3a3b5;
+  --g-fill: #1d1d24;
+  --g-grid: rgba(20, 20, 30, 0.06);
+  --g-tick: #8a8a99;
+  --g-dot-stroke: #ffffff;
+  --g-up: #16a34a;
+  --g-down: #dc2626;
+}
+.dark {
+  --g-line: rgba(255, 255, 255, 0.92);
+  --g-line-2: rgba(196, 190, 255, 0.75);
+  --g-line-3: rgba(255, 255, 255, 0.35);
+  --g-fill: #ffffff;
+  --g-grid: rgba(255, 255, 255, 0.05);
+  --g-tick: rgba(255, 255, 255, 0.38);
+  --g-dot-stroke: #0c0c10;
+  --g-up: #4ade80;
+  --g-down: #f87171;
+}
+
+/* ---------- Typography ---------- */
+body, .ascend-app { font-family: var(--lg-font) !important; letter-spacing: -0.005em; }
+.ascend-app .font-mono { font-family: var(--lg-font) !important; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.ascend-app pre { font-family: ui-monospace, "SF Mono", Menlo, monospace !important; }
+.ascend-app .font-black { font-weight: 600 !important; }
+.ascend-app .font-extrabold { font-weight: 600 !important; }
+.ascend-app .font-bold { font-weight: 550 !important; }
+.ascend-app h1 { font-weight: 500 !important; letter-spacing: -0.035em !important; }
+.ascend-app h2, .ascend-app h3 { font-weight: 500 !important; letter-spacing: -0.025em !important; }
+.ascend-app .text-2xl { letter-spacing: -0.03em; }
+.ascend-app .uppercase { letter-spacing: 0.06em; }
+
+/* ---------- Canvas with ambient blurred light ---------- */
+.dark body, .dark .ascend-app { background-color: #08080b !important; }
+.dark .ascend-app {
+  position: relative;
+  isolation: isolate;
+  background-image:
+    radial-gradient(60% 50% at 8% 0%, rgba(146, 148, 220, 0.42) 0%, rgba(90, 92, 160, 0.16) 35%, transparent 70%),
+    radial-gradient(40% 40% at 100% 100%, rgba(120, 110, 200, 0.12) 0%, transparent 70%),
+    linear-gradient(180deg, #0d0d12 0%, #08080b 100%) !important;
+}
+.ascend-app::before,
+.ascend-app::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 9999px;
+  filter: blur(90px);
+}
+.dark .ascend-app::before {
+  width: 520px; height: 520px; top: -160px; left: -120px;
+  background: radial-gradient(circle, rgba(165, 165, 255, 0.28), transparent 70%);
+  animation: lgDrift 18s ease-in-out infinite alternate;
+}
+.dark .ascend-app::after {
+  width: 420px; height: 420px; bottom: -160px; right: -80px;
+  background: radial-gradient(circle, rgba(140, 120, 230, 0.16), transparent 70%);
+  animation: lgDrift 22s ease-in-out infinite alternate-reverse;
+}
+@keyframes lgDrift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(40px, 30px, 0) scale(1.08); }
+}
+:not(.dark) > body .ascend-app,
+html:not(.dark) .ascend-app {
+  background-image:
+    radial-gradient(60% 50% at 8% 0%, rgba(160, 165, 235, 0.35), transparent 70%),
+    linear-gradient(180deg, #f3f3f7, #ececf2) !important;
+}
+
+/* ---------- Outer shell (the big glass pane) ---------- */
+.netic-outer-shell {
+  border-radius: 28px !important;
+  backdrop-filter: blur(40px) saturate(150%);
+  -webkit-backdrop-filter: blur(40px) saturate(150%);
+}
+.dark .netic-outer-shell {
+  background: linear-gradient(160deg, rgba(28, 28, 36, 0.62) 0%, rgba(12, 12, 16, 0.78) 45%, rgba(10, 10, 13, 0.85) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 40px 120px -20px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+html:not(.dark) .netic-outer-shell {
+  background: rgba(255, 255, 255, 0.55) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 30px 80px -20px rgba(40, 40, 80, 0.18), inset 0 1px 0 #fff !important;
+}
+
+/* Sidebar — part of the same pane, separated only by a hairline */
+.dark .netic-outer-shell aside {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01)) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+}
+html:not(.dark) .netic-outer-shell aside { background: rgba(255, 255, 255, 0.35) !important; border-right: 1px solid rgba(0, 0, 0, 0.05) !important; }
+.netic-outer-shell main > header { border-bottom: none !important; }
+
+/* ---------- Glass cards ---------- */
+.liquid-glass-card {
+  border-radius: 20px !important;
+  backdrop-filter: blur(24px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+  transition: transform .35s cubic-bezier(.16, 1, .3, 1), border-color .3s ease, box-shadow .35s ease, background .3s ease !important;
+}
+.dark .liquid-glass-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0.018) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  box-shadow: 0 20px 50px -18px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 0 0.5px rgba(255, 255, 255, 0.02) !important;
+}
+.dark .liquid-glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.13) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.025) 100%) !important;
+}
+html:not(.dark) .liquid-glass-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.6)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 14px 40px -16px rgba(40, 40, 80, 0.16), inset 0 1px 0 #fff !important;
+}
+html:not(.dark) .liquid-glass-card:hover { border-color: rgba(120, 120, 160, 0.25) !important; }
+
+/* Specular sheen on cards (top-left light catch) */
+.dark .liquid-glass-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(120% 60% at 0% 0%, rgba(255, 255, 255, 0.06), transparent 55%);
+}
+
+/* Neon edges → slim soft accent bars like the reference price markers */
+.neon-edge-purple::before, .neon-edge-violet::before, .neon-edge-lavender::before,
+.neon-edge-electric::before, .neon-edge-cyan::before, .neon-edge-orange::before, .neon-edge-emerald::before {
+  width: 2px !important; top: 28% !important; height: 44% !important;
+  box-shadow: 0 0 10px currentColor !important;
+}
+.neon-edge-purple::before, .neon-edge-cyan::before { background: #f5a524 !important; color: rgba(245, 165, 36, .6); }
+.neon-edge-violet::before, .neon-edge-emerald::before { background: #7c8cff !important; color: rgba(124, 140, 255, .6); }
+.neon-edge-electric::before, .neon-edge-orange::before { background: #e5e5ea !important; color: rgba(255, 255, 255, .4); }
+.neon-edge-lavender::before { background: #b9a6ff !important; color: rgba(185, 166, 255, .6); }
+
+/* ---------- Monochrome remap of purple utilities (dark mode) ---------- */
+.dark .ascend-app [class*="text-purple-50"],
+.dark .ascend-app [class*="text-purple-100"],
+.dark .ascend-app [class*="text-purple-200"] { color: #f4f4f7 !important; }
+.dark .ascend-app [class*="text-purple-300"] { color: rgba(255, 255, 255, 0.78) !important; }
+.dark .ascend-app [class*="text-purple-400"],
+.dark .ascend-app [class*="text-purple-500"],
+.dark .ascend-app [class*="text-purple-600"] { color: rgba(255, 255, 255, 0.62) !important; }
+.dark .ascend-app [class*="text-purple-300/"],
+.dark .ascend-app [class*="text-purple-400/"] { color: rgba(255, 255, 255, 0.42) !important; }
+.dark .ascend-app [class*="text-fuchsia-"] { color: rgba(255, 255, 255, 0.7) !important; }
+.dark .ascend-app .text-white { color: #f7f7f9 !important; }
+.dark .ascend-app [class*="text-slate-400"], .dark .ascend-app [class*="text-slate-500"] { color: rgba(255, 255, 255, 0.42) !important; }
+
+.dark .ascend-app [class*="bg-purple-"] { background-color: rgba(255, 255, 255, 0.055) !important; }
+.dark .ascend-app [class*="bg-purple-9"] { background-color: rgba(255, 255, 255, 0.035) !important; }
+.dark .ascend-app [class*="hover:bg-purple-"]:hover { background-color: rgba(255, 255, 255, 0.1) !important; }
+.dark .ascend-app [class*="bg-[#07070a]"], .dark .ascend-app [class*="bg-[#09090e]"],
+.dark .ascend-app [class*="bg-[#060609]"], .dark .ascend-app [class*="bg-[#0b0b10]"] {
+  background: rgba(0, 0, 0, 0.22) !important;
+}
+.dark .ascend-app [class*="border-purple-"] { border-color: rgba(255, 255, 255, 0.07) !important; }
+.dark .ascend-app [class*="divide-purple-"] > * + * { border-color: rgba(255, 255, 255, 0.05) !important; }
+.dark .ascend-app [class*="shadow-purple-"] { --tw-shadow-color: rgba(0, 0, 0, 0.4) !important; }
+.dark .ascend-app .border-l-purple-500 { border-left-color: rgba(255, 255, 255, 0.35) !important; }
+.dark .ascend-app .bg-purple-400 { background-color: rgba(255, 255, 255, 0.8) !important; }
+
+/* Brand / avatar gradients become graphite glass */
+.dark .ascend-app [class*="from-purple-"] {
+  background-image: linear-gradient(140deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.06)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+/* ---------- Navigation ---------- */
+.netic-outer-shell aside nav button { border-radius: 12px !important; font-weight: 450; }
+.dark .nav-liquid-btn.active {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.04)) !important;
+  color: #fff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 6px 18px -8px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.nav-liquid-btn.active::before {
+  left: auto !important; right: 10px !important;
+  top: 32% !important; height: 36% !important; width: 2px !important;
+  background: currentColor !important; box-shadow: 0 0 8px rgba(255, 255, 255, 0.6) !important;
+}
+
+/* ---------- Pills / segmented controls ---------- */
+.dark .liquid-pill-track {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  backdrop-filter: blur(16px);
+  border-radius: 12px;
+}
+.dark .liquid-pill-btn { color: rgba(255, 255, 255, 0.5) !important; font-weight: 500; }
+.dark .liquid-pill-btn:hover { color: #fff !important; }
+.dark .liquid-pill-btn.active {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ---------- Primary button: frosted white ---------- */
+.liquid-btn-primary {
+  background: linear-gradient(180deg, #ffffff 0%, #dcdce4 100%) !important;
+  color: #0b0b0f !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 0 10px 28px -10px rgba(255, 255, 255, 0.35), inset 0 1px 0 #fff !important;
+}
+.liquid-btn-primary svg { color: #0b0b0f !important; }
+.liquid-btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 14px 34px -10px rgba(255, 255, 255, 0.45), inset 0 1px 0 #fff !important; }
+html:not(.dark) .liquid-btn-primary { background: linear-gradient(180deg, #23232b, #0d0d12) !important; color: #fff !important; border-color: #0d0d12 !important; }
+html:not(.dark) .liquid-btn-primary svg { color: #fff !important; }
+
+/* ---------- Inputs ---------- */
+.dark .ascend-app input {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #f4f4f7 !important;
+  backdrop-filter: blur(12px);
+}
+.dark .ascend-app input:focus { border-color: rgba(255, 255, 255, 0.28) !important; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06) !important; }
+.dark .ascend-app input::placeholder { color: rgba(255, 255, 255, 0.3) !important; }
+
+/* ---------- Status dots ---------- */
+.live-glow-dot { background: #4ade80 !important; box-shadow: 0 0 8px rgba(74, 222, 128, 0.7) !important; }
+
+/* Delta pills (used by KPI cards) */
+.lg-delta { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums; backdrop-filter: blur(10px); }
+.lg-delta.up { color: var(--g-up); background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.18); }
+.lg-delta.down { color: var(--g-down); background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.18); }
+.lg-delta.flat { color: var(--g-tick); background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); }
+.lg-icon-orb { width: 30px; height: 30px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(140deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04)); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15); }
+html:not(.dark) .lg-icon-orb { background: linear-gradient(140deg, #fff, #ececf2); border-color: rgba(0, 0, 0, 0.06); }
+
+/* Chart tooltip glass */
+.lg-tooltip {
+  padding: 10px 12px; border-radius: 14px; font-size: 11px;
+  background: rgba(20, 20, 26, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: #f4f4f7;
+}
+html:not(.dark) .lg-tooltip { background: rgba(255, 255, 255, 0.75); color: #111; border-color: rgba(0, 0, 0, 0.06); }
+
+/* Recharts polish */
+.ascend-app .recharts-cartesian-axis-tick-value { font-family: var(--lg-font); }
+.ascend-app .recharts-curve.recharts-area-area { transition: d .6s cubic-bezier(.16, 1, .3, 1); }
+
+/* Modal backdrop gets real blur */
+.ascend-app .fixed.inset-0 { backdrop-filter: blur(14px) saturate(120%) !important; -webkit-backdrop-filter: blur(14px) saturate(120%) !important; }
+
+/* Scrollbar */
+.dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1) !important; }
+
+/* Page entrance */
+.ascend-app main > * { animation: lgRise .6s cubic-bezier(.16, 1, .3, 1) both; }
+.ascend-app main > *:nth-child(2) { animation-delay: .05s; }
+.ascend-app main > *:nth-child(3) { animation-delay: .1s; }
+@keyframes lgRise { from { opacity: 0; transform: translateY(8px); filter: blur(6px); } to { opacity: 1; transform: none; filter: blur(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ascend-app::before, .ascend-app::after, .ascend-app main > * { animation: none !important; }
+}

@@ -94,9 +94,9 @@ export default function AscendApp() {
   const topPendingDecision = decisions.find((d) => d.status === "pending_approval") || decisions[0];
 
   return (
-    <div className={`ascend-app min-h-screen p-3 sm:p-6 transition-colors duration-200 ${isDark ? "bg-[#070b11]" : "bg-[#eef2f6]"}`}>
-      {/* Outer Rounded Container matching Image 1 & 2 */}
-      <div className="netic-outer-shell max-w-[1600px] mx-auto min-h-[94vh] flex flex-col md:flex-row bg-white dark:bg-slate-900 overflow-hidden border border-slate-200/60 dark:border-slate-800 shadow-xl">
+    <div className={`ascend-app min-h-screen p-2.5 sm:p-5 transition-colors duration-250 ${isDark ? "bg-[#050507]" : "bg-[#f4f3f9]"}`}>
+      {/* Outer Shell with pure black and purple border depth */}
+      <div className="netic-outer-shell max-w-[1600px] mx-auto min-h-[94vh] flex flex-col md:flex-row bg-white dark:bg-[#08080c] overflow-hidden border border-purple-500/15 dark:border-purple-500/20 shadow-2xl">
         {/* Left Sidebar */}
         <Sidebar
           activeTab={activeTab}

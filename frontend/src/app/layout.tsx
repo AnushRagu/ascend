@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./liquid-glass.css";
 
 export const metadata: Metadata = {
   title: "ASCEND — Autonomous Cross-Channel Intelligence & Decision Engine",
@@ -13,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-[#eef2f6] text-slate-800 antialiased selection:bg-[#635bff] selection:text-white min-h-screen">
+      <body className="antialiased min-h-screen selection:bg-white/25 selection:text-white">
         {children}
       </body>
     </html>

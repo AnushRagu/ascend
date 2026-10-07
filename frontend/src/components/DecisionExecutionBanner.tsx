@@ -14,7 +14,7 @@ export default function DecisionExecutionBanner({
   onRefresh,
 }: DecisionExecutionBannerProps) {
   const [loading, setLoading] = useState(false);
-  const [approved, setApproved] = useState(false);
+  const [executionState, setExecutionState] = useState<string | null>(null);
 
   // If a pending decision exists from the engine, display real dynamics
   const actionText = topDecision
@@ -36,12 +36,17 @@ export default function DecisionExecutionBanner({
       return;
     }
     setLoading(true);
+    setExecutionState("APPROVED");
     try {
+      setTimeout(() => setExecutionState("EXECUTING"), 400);
       await approveDecision(topDecision.id);
-      setApproved(true);
-      if (onRefresh) onRefresh();
-      setTimeout(() => setApproved(false), 3000);
+      setTimeout(() => setExecutionState("EXECUTED"), 900);
+      setTimeout(() => {
+        setExecutionState(null);
+        if (onRefresh) onRefresh();
+      }, 1600);
     } catch (e: any) {
+      setExecutionState(null);
       alert(`Approval error: ${e.message}`);
     } finally {
       setLoading(false);
@@ -74,25 +79,25 @@ export default function DecisionExecutionBanner({
   };
 
   return (
-    <div className="netic-card p-5">
+    <div className="liquid-glass-card p-5 border border-purple-500/15">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
         {/* Column 1: WHAT CHANGED (lg:col-span-3) */}
-        <div className="lg:col-span-3 bg-slate-50/80 dark:bg-slate-800/40 rounded-xl p-4 border border-slate-100 dark:border-slate-800">
-          <div className="text-[11px] font-bold tracking-wider text-slate-400 uppercase mb-3">
+        <div className="lg:col-span-3 bg-purple-500/05 dark:bg-[#07070a] rounded-xl p-4 border border-purple-500/15">
+          <div className="text-[10px] font-black tracking-wider text-purple-400 uppercase mb-3">
             WHAT CHANGED
           </div>
           <div className="space-y-2.5">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-slate-700 dark:text-slate-200">
+              <span className="font-semibold text-slate-700 dark:text-purple-200">
                 {topDecision?.channel ? `${topDecision.channel.toUpperCase()} Allocation` : "Channel Velocity"}
               </span>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold ${topDecision?.delta_budget_pct < 0 ? "bg-[#ffe4e6] text-[#e11d48]" : "bg-[#dcfce7] text-[#16a34a]"}`}>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-bold ${topDecision?.delta_budget_pct < 0 ? "bg-purple-950/40 text-purple-300 border border-purple-500/30" : "bg-purple-500/20 text-purple-200 border border-purple-500/40"}`}>
                 {deltaLabel}
               </span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-slate-700 dark:text-slate-200">Confidence Score</span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-[#eff6ff] text-[#2563eb]">
+              <span className="font-semibold text-slate-700 dark:text-purple-200">Confidence Score</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">
                 {topDecision?.confidence_score !== undefined && topDecision?.confidence_score !== null
                   ? `${Math.round(topDecision.confidence_score * 100)}%`
                   : "—"}
@@ -103,18 +108,18 @@ export default function DecisionExecutionBanner({
 
         {/* Arrow Divider */}
         <div className="hidden lg:flex lg:col-span-1 justify-center">
-          <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+          <div className="w-8 h-8 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
             <ArrowRight className="w-4 h-4" />
           </div>
         </div>
 
         {/* Column 2: WHY (ROOT CAUSE) (lg:col-span-3) */}
-        <div className="lg:col-span-3 bg-slate-50/80 dark:bg-slate-800/40 rounded-xl p-4 border border-slate-100 dark:border-slate-800">
-          <div className="text-[11px] font-bold tracking-wider text-slate-400 uppercase mb-3">
+        <div className="lg:col-span-3 bg-purple-500/05 dark:bg-[#07070a] rounded-xl p-4 border border-purple-500/15">
+          <div className="text-[10px] font-black tracking-wider text-purple-400 uppercase mb-3">
             WHY (ROOT CAUSE)
           </div>
           <div className="space-y-2.5">
-            <div className="text-xs text-slate-700 dark:text-slate-300 font-medium line-clamp-3 leading-relaxed">
+            <div className="text-xs text-slate-700 dark:text-purple-200/80 font-medium line-clamp-3 leading-relaxed">
               {topDecision?.rationale
                 ? topDecision.rationale.split("[")[0]
                 : "Continuous closed-loop telemetry analysis evaluating inventory safety, unit margins, and audience saturation."}
@@ -123,19 +128,19 @@ export default function DecisionExecutionBanner({
         </div>
 
         {/* Column 3: NEXT BEST ACTION (lg:col-span-5) */}
-        <div className="lg:col-span-5 bg-[#f8f7ff] dark:bg-[#1e1b4b]/30 rounded-xl p-4 border border-[#e5e0ff] dark:border-[#3730a3]/60 flex flex-col justify-between space-y-3">
+        <div className="lg:col-span-5 bg-purple-500/10 dark:bg-purple-950/20 rounded-xl p-4 border border-purple-500/25 flex flex-col justify-between space-y-3">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold tracking-wider text-[#635bff] uppercase">
+            <span className="text-[10px] font-black tracking-wider text-purple-400 uppercase">
               NEXT BEST ACTION
             </span>
-            <span className="text-xs font-bold text-[#10b981]">
+            <span className="text-xs font-bold text-purple-300">
               Expected Profit: {expectedProfit}
             </span>
           </div>
 
           {/* Action text */}
-          <div className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug">
+          <div className="text-sm font-bold text-slate-900 dark:text-white leading-snug">
             {actionText}
           </div>
 
@@ -144,19 +149,23 @@ export default function DecisionExecutionBanner({
             <button
               onClick={handleEdit}
               disabled={loading || !topDecision?.id}
-              className="px-4 py-1.5 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-50 transition disabled:opacity-50"
+              className="px-4 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-white/[0.08] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 shadow-sm hover:bg-slate-50 dark:hover:bg-white/15 transition disabled:opacity-50"
             >
               Edit
             </button>
             <button
               onClick={handleApprove}
-              disabled={loading || approved || !topDecision?.id}
-              className="flex items-center space-x-1 px-5 py-1.5 rounded-full text-xs font-semibold bg-[#635bff] hover:bg-[#5248e8] text-white shadow-md shadow-indigo-500/25 transition disabled:opacity-50"
+              disabled={loading || executionState !== null || !topDecision?.id}
+              className={`flex items-center space-x-1 px-5 py-1.5 rounded-xl text-xs font-bold transition disabled:opacity-50 interactive-button ${
+                executionState
+                  ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 animate-pulse"
+                  : "liquid-btn-primary"
+              }`}
             >
-              {approved ? (
+              {executionState ? (
                 <>
                   <Check className="w-3.5 h-3.5 mr-1" />
-                  <span>Approved!</span>
+                  <span>{executionState}...</span>
                 </>
               ) : (
                 <span>{loading ? "Executing..." : "Approve & Execute"}</span>
