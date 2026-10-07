@@ -38,7 +38,7 @@ export default function AscendApp() {
     "command_center" | "decision_inbox" | "inventory" | "anomaly_explorer" | "outcome_tracker" | "policy_settings"
   >("command_center");
 
-  const [isDark, setIsDark] = useState<boolean>(false);
+  const [isDark, setIsDark] = useState<boolean>(true);
   const [kpis, setKpis] = useState<any>(defaultInitialKPIs);
   const [timeseries, setTimeseries] = useState<any[]>([]);
   const [inventory, setInventory] = useState<any[]>([]);
@@ -94,7 +94,7 @@ export default function AscendApp() {
   const topPendingDecision = decisions.find((d) => d.status === "pending_approval") || decisions[0];
 
   return (
-    <div className={`min-h-screen p-3 sm:p-6 transition-colors duration-200 ${isDark ? "bg-[#090d16]" : "bg-[#eef2f6]"}`}>
+    <div className={`ascend-app min-h-screen p-3 sm:p-6 transition-colors duration-200 ${isDark ? "bg-[#070b11]" : "bg-[#eef2f6]"}`}>
       {/* Outer Rounded Container matching Image 1 & 2 */}
       <div className="netic-outer-shell max-w-[1600px] mx-auto min-h-[94vh] flex flex-col md:flex-row bg-white dark:bg-slate-900 overflow-hidden border border-slate-200/60 dark:border-slate-800 shadow-xl">
         {/* Left Sidebar */}
@@ -110,7 +110,7 @@ export default function AscendApp() {
         {/* Right Main Dashboard Area */}
         <main className="flex-1 flex flex-col min-w-0 p-5 sm:p-7 space-y-6 overflow-y-auto">
           {/* Welcome Header */}
-          <TopHeader userName="Alex" dateStr="Monday, March 01, 2026" />
+          <TopHeader userName="Alex" dateStr={new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "2-digit", year: "numeric" })} />
 
           {/* D2C Telemetry Scenario Bar */}
           <ScenarioBar
@@ -126,6 +126,8 @@ export default function AscendApp() {
               timeseries={timeseries}
               inventory={inventory}
               topDecision={topPendingDecision}
+              anomalies={anomalies}
+              decisions={decisions}
               onRefresh={loadData}
             />
           )}

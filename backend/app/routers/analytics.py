@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from typing import Dict, Any, List
+from datetime import datetime
 
 from app.database import get_db
 from app.models.models import MetricRecord, Campaign, ProductSKU, ChannelEnum
@@ -79,7 +80,7 @@ async def get_geography_distribution(db: AsyncSession = Depends(get_db)) -> Dict
 
 @router.get("/timeseries")
 async def get_timeseries_data(db: AsyncSession = Depends(get_db)) -> List[Dict[str, Any]]:
-    """Returns aggregated daily telemetry for timeline charts."""
+    """Returns historical metric records plus a live projection from current business state."""
     res = await db.execute(select(MetricRecord).order_by(MetricRecord.timestamp.asc()).limit(90))
     records = res.scalars().all()
 
@@ -108,6 +109,35 @@ async def get_timeseries_data(db: AsyncSession = Depends(get_db)) -> List[Dict[s
         val["contribution_margin"] = round(val["contribution_margin"], 2)
         val["mer"] = round(val["revenue"] / max(1.0, val["spend"]), 2)
         output.append(val)
+
+    # The simulator's scenario and execution endpoints mutate campaigns and SKU
+    # economics directly. Reflect that actual current state as the latest point
+    # instead of waiting for another persisted MetricRecord to be written.
+    campaigns_res = await db.execute(select(Campaign))
+    campaigns = campaigns_res.scalars().all()
+    skus_res = await db.execute(select(ProductSKU))
+    sku_margin_lookup = {sku.id: sku.contribution_margin_pct for sku in skus_res.scalars().all()}
+    active_campaigns = [campaign for campaign in campaigns if campaign.status == "ACTIVE"]
+    live_spend = sum(campaign.daily_budget for campaign in active_campaigns)
+    live_revenue = sum(campaign.daily_budget * campaign.current_roas for campaign in active_campaigns)
+    live_contribution = sum(
+        (campaign.daily_budget * campaign.current_roas * sku_margin_lookup.get(campaign.target_sku_id, 0.40))
+        - campaign.daily_budget
+        for campaign in active_campaigns
+    )
+    if campaigns:
+        live_timestamp = datetime.utcnow()
+        output.append({
+            "date": live_timestamp.strftime("%Y-%m-%d"),
+            "timestamp": live_timestamp.isoformat(),
+            "period": "live",
+            "spend": round(live_spend, 2),
+            "revenue": round(live_revenue, 2),
+            "net_revenue": round(live_revenue * 0.92, 2),
+            "contribution_margin": round(live_contribution, 2),
+            "conversions": 0,
+            "mer": round(live_revenue / max(1.0, live_spend), 2),
+        })
     return output
 
 @router.get("/inventory")

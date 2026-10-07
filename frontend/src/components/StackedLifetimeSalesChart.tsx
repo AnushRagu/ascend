@@ -1,157 +1,62 @@
 "use client";
 
-import React, { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceDot } from "recharts";
+import { Activity, CircleHelp } from "lucide-react";
 
-interface StackedLifetimeSalesChartProps {
-  timeseries?: any[];
-}
+interface Props { timeseries?: any[]; anomalies?: any[]; decisions?: any[] }
+const money = (value: number) => `$${Math.round(value || 0).toLocaleString("en-US")}`;
 
-export default function StackedLifetimeSalesChart({ timeseries }: StackedLifetimeSalesChartProps) {
-  const [selectedFilter, setSelectedFilter] = useState("Daily");
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+export default function StackedLifetimeSalesChart({ timeseries = [], anomalies = [], decisions = [] }: Props) {
+  const [selected, setSelected] = useState<any>(null);
+  const rows = useMemo(() => timeseries.map((item) => ({
+    ...item,
+    label: item.date ? new Date(`${item.date}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—",
+    revenue: Number(item.revenue || 0),
+    contribution: Number(item.contribution_margin || 0),
+    spend: Number(item.spend || 0),
+  })), [timeseries]);
+  const active = selected || rows[rows.length - 1];
+  const hasValues = rows.some((row) => row.revenue || row.contribution || row.spend);
 
-  // If real timeseries data is present from API, format last 12-14 days
-  const chartData = (timeseries && timeseries.length > 0)
-    ? timeseries.slice(-12).map((item: any) => {
-        const dateParts = item.date ? item.date.split("-") : ["", "", ""];
-        const dayLabel = dateParts.length === 3 ? `${dateParts[1]}/${dateParts[2]}` : item.date;
-        const rev = Math.round(item.revenue || 0);
-        const spend = Math.round(item.spend || 0);
-        const cm = Math.round(item.contribution_margin || 0);
-        return {
-          label: dayLabel,
-          sales: Math.round(spend / 10), // normalized unit scale
-          order: Math.round(cm / 15),
-          revenue: Math.round(rev / 25),
-          rawRev: rev,
-          rawSpend: spend,
-          rawCm: cm
-        };
-      })
-    : [
-        { label: "Day 1", sales: 85, order: 45, revenue: 35, rawRev: 9400, rawSpend: 3100, rawCm: 3600 },
-        { label: "Day 2", sales: 115, order: 48, revenue: 65, rawRev: 9800, rawSpend: 3100, rawCm: 3750 },
-        { label: "Day 3", sales: 140, order: 45, revenue: 62, rawRev: 9600, rawSpend: 3100, rawCm: 3700 },
-        { label: "Day 4", sales: 175, order: 65, revenue: 75, rawRev: 10200, rawSpend: 3100, rawCm: 3950 },
-        { label: "Day 5", sales: 125, order: 55, revenue: 45, rawRev: 9500, rawSpend: 3100, rawCm: 3650 },
-        { label: "Day 6", sales: 205, order: 65, revenue: 85, rawRev: 10600, rawSpend: 3100, rawCm: 4100 },
-        { label: "Day 7", sales: 185, order: 55, revenue: 65, rawRev: 10100, rawSpend: 3100, rawCm: 3900 },
-        { label: "Day 8", sales: 135, order: 50, revenue: 58, rawRev: 9700, rawSpend: 3100, rawCm: 3720 },
-        { label: "Day 9", sales: 105, order: 55, revenue: 45, rawRev: 9300, rawSpend: 3100, rawCm: 3580 },
-        { label: "Day 10", labelAlt: "D10", sales: 140, order: 55, revenue: 60, rawRev: 9850, rawSpend: 3100, rawCm: 3820 },
-        { label: "Day 11", labelAlt: "D11", sales: 165, order: 65, revenue: 70, rawRev: 10400, rawSpend: 3100, rawCm: 4050 },
-        { label: "Today", sales: 180, order: 65, revenue: 75, rawRev: 9810, rawSpend: 3100, rawCm: 3802 },
-      ];
-
-  const maxValue = 400; // top y-axis limit
-
-  return (
-    <div className="netic-card p-6 flex flex-col justify-between">
-      {/* Top Header & Legend */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div>
-          <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">Lifetime Sales & Unit Economics</h3>
-          {/* Legend */}
-          <div className="flex items-center space-x-4 mt-2 text-xs">
-            <span className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-300">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#2563eb]" />
-              <span className="font-medium">Ad Spend Volume</span>
-            </span>
-            <span className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-300">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#f97316]" />
-              <span className="font-medium">Net Contribution</span>
-            </span>
-            <span className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-300">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#38bdf8]" />
-              <span className="font-medium">Gross Revenue</span>
-            </span>
-          </div>
-        </div>
-
-        {/* Filter Pill */}
-        <div className="relative">
-          <button className="flex items-center space-x-1.5 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 shadow-sm">
-            <span>{selectedFilter}</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-          </button>
-        </div>
+  return <section className="netic-card chart-card">
+    <div className="chart-heading">
+      <div>
+        <div className="eyebrow"><Activity size={13} /> LIVE BUSINESS TELEMETRY</div>
+        <h2>Lifetime sales &amp; unit economics</h2>
+        <p>Performance movement across revenue, contribution and paid media</p>
       </div>
-
-      {/* Chart Canvas */}
-      <div className="relative h-64 w-full flex">
-        {/* Y-Axis scale numbers */}
-        <div className="h-full flex flex-col justify-between text-[11px] font-medium text-slate-400 dark:text-slate-500 pr-3 select-none pb-6">
-          <span>400</span>
-          <span>300</span>
-          <span>200</span>
-          <span>100</span>
-          <span>0</span>
-        </div>
-
-        {/* Chart area with dashed horizontal grid lines */}
-        <div className="relative flex-1 h-full flex flex-col justify-between pb-6">
-          {/* 5 dashed grid lines */}
-          <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-6">
-            <div className="w-full border-b border-slate-100 dark:border-slate-800" />
-            <div className="w-full border-b border-slate-100 dark:border-slate-800" />
-            <div className="w-full border-b border-slate-100 dark:border-slate-800" />
-            <div className="w-full border-b border-slate-100 dark:border-slate-800" />
-            <div className="w-full border-b border-slate-100 dark:border-slate-800" />
-          </div>
-
-          {/* Bars container */}
-          <div className="relative z-10 w-full h-full flex items-end justify-between px-2">
-            {chartData.map((d: any, idx: number) => {
-              const salesHeight = Math.min(100, (d.sales / maxValue) * 100);
-              const orderHeight = Math.min(100, (d.order / maxValue) * 100);
-              const revenueHeight = Math.min(100, (d.revenue / maxValue) * 100);
-              const isHovered = hoveredIndex === idx;
-
-              return (
-                <div
-                  key={d.label + idx}
-                  className="flex flex-col items-center flex-1 h-full justify-end cursor-pointer group"
-                  onMouseEnter={() => setHoveredIndex(idx)}
-                  onMouseLeave={() => setHoveredIndex(null)}
-                >
-                  {/* Tooltip */}
-                  {isHovered && (
-                    <div className="absolute -top-12 z-30 bg-slate-900 text-white text-[11px] py-1.5 px-3 rounded-lg shadow-xl pointer-events-none whitespace-nowrap animate-in fade-in">
-                      <div className="font-bold">{d.label}</div>
-                      <div>Rev: ${d.rawRev?.toLocaleString()} | CM: ${d.rawCm?.toLocaleString()}</div>
-                    </div>
-                  )}
-
-                  {/* The 3-tier Stacked Bar */}
-                  <div className="w-4 sm:w-5 md:w-6 flex flex-col justify-end transition-all duration-200 group-hover:brightness-105">
-                    {/* Top: Cyan Revenue */}
-                    <div
-                      className="w-full bg-[#38bdf8] rounded-t-md mb-[2px]"
-                      style={{ height: `${revenueHeight}%` }}
-                    />
-                    {/* Middle: Orange Order */}
-                    <div
-                      className="w-full bg-[#f97316] mb-[2px]"
-                      style={{ height: `${orderHeight}%` }}
-                    />
-                    {/* Bottom: Blue Sales */}
-                    <div
-                      className="w-full bg-[#2563eb]"
-                      style={{ height: `${salesHeight}%` }}
-                    />
-                  </div>
-
-                  {/* X-axis Label */}
-                  <div className="absolute -bottom-6 text-[10px] font-medium text-slate-400 dark:text-slate-500 truncate max-w-[36px]">
-                    {d.label}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      <div className="chart-status"><span className="status-pulse" /> {rows.length ? `${rows.length} telemetry periods` : "Awaiting telemetry"}</div>
     </div>
-  );
+    <div className="chart-summary">
+      <div><span className="metric-dot revenue-dot"/><span>Revenue</span><b>{active ? money(active.revenue) : "—"}</b></div>
+      <div><span className="metric-dot contribution-dot"/><span>Contribution</span><b>{active ? money(active.contribution) : "—"}</b></div>
+      <div><span className="metric-dot spend-dot"/><span>Ad spend</span><b>{active ? money(active.spend) : "—"}</b></div>
+      <div className="period-label">{active?.date ? new Date(`${active.date}T12:00:00`).toLocaleDateString("en-US", { month: "long", day: "numeric" }) : "Select a period"}</div>
+    </div>
+    <div className="chart-plot">
+      {hasValues ? <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={rows} margin={{ top: 12, right: 12, left: 2, bottom: 2 }} onMouseMove={(state: any) => { if (state?.activePayload?.[0]) setSelected(state.activePayload[0].payload); }} onMouseLeave={() => setSelected(null)}>
+          <CartesianGrid stroke="var(--grid)" vertical={false} strokeDasharray="3 6" />
+          <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: "var(--chart-tick)", fontSize: 11 }} minTickGap={28} />
+          <YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--chart-tick)", fontSize: 11 }} tickFormatter={(v) => v >= 1000 ? `$${Math.round(v / 1000)}k` : `$${v}`} width={46} />
+          <Tooltip content={() => null} />
+          <Line type="monotone" dataKey="revenue" name="Revenue" stroke="var(--chart-revenue)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: "var(--chart-revenue)", stroke: "var(--panel)", strokeWidth: 3 }} isAnimationActive animationDuration={600} />
+          <Line type="monotone" dataKey="contribution" name="Contribution" stroke="var(--chart-contribution)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: "var(--chart-contribution)", stroke: "var(--panel)", strokeWidth: 3 }} isAnimationActive animationDuration={700} />
+          <Line type="monotone" dataKey="spend" name="Ad spend" stroke="var(--chart-spend)" strokeWidth={2} strokeDasharray="5 5" dot={false} activeDot={{ r: 4, fill: "var(--chart-spend)", stroke: "var(--panel)", strokeWidth: 2 }} isAnimationActive animationDuration={500} />
+          {anomalies.slice(0, 3).map((event, index) => {
+            const date = (event.detected_at || event.timestamp || event.created_at || "").slice(0, 10);
+            const point = rows.find((row) => row.date === date);
+            return point ? <ReferenceDot key={`a-${event.id || index}`} x={point.label} y={point.revenue} r={5} fill="#fb7185" stroke="#190c12" /> : null;
+          })}
+          {decisions.filter((event) => event.status === "auto_executed" || event.status === "executed").slice(0, 3).map((event, index) => {
+            const date = (event.executed_at || event.created_at || "").slice(0, 10);
+            const point = rows.find((row) => row.date === date);
+            return point ? <ReferenceDot key={`d-${event.id || index}`} x={point.label} y={point.contribution} r={5} fill="var(--chart-revenue)" stroke="var(--panel)" /> : null;
+          })}
+        </LineChart>
+      </ResponsiveContainer> : <div className="chart-empty"><CircleHelp size={20}/><strong>No telemetry recorded yet</strong><span>Business movement will appear as ASCEND records operating data.</span></div>}
+    </div>
+    <div className="chart-footnote"><span><i className="event-key anomaly-key"/> Anomaly</span><span><i className="event-key decision-key"/> Executed decision</span><span className="chart-source">Source · ASCEND metric records</span></div>
+  </section>;
 }

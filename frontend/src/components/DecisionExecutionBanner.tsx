@@ -21,14 +21,14 @@ export default function DecisionExecutionBanner({
     ? `${topDecision.action_type === "inventory_protect_pause" ? `Pause spend on ${topDecision.target_sku || "Hero SKU"} to prevent stockout damage` : `Shift $${Math.abs(topDecision.delta_budget_abs || 250)} daily spend: ${topDecision.campaign_name}`}`
     : "Autonomous Pipeline Ready — Run Cycle to Generate Strategy";
 
-  const expectedProfit = topDecision
-    ? `+$${Math.round(topDecision.expected_contribution_profit || 875)}/day`
-    : "+$875/day";
+  const expectedProfit = topDecision?.expected_contribution_profit !== undefined && topDecision?.expected_contribution_profit !== null
+    ? `${topDecision.expected_contribution_profit >= 0 ? "+" : "−"}$${Math.round(Math.abs(topDecision.expected_contribution_profit))}/day`
+    : "Awaiting evaluation";
 
   // Derive What Changed from topDecision or default
-  const deltaLabel = topDecision?.delta_budget_pct
+  const deltaLabel = topDecision?.delta_budget_pct !== undefined && topDecision?.delta_budget_pct !== null
     ? `${topDecision.delta_budget_pct > 0 ? "↑" : "↓"} ${Math.abs(topDecision.delta_budget_pct)}%`
-    : "↓ 18%";
+    : "No change recorded";
 
   const handleApprove = async () => {
     if (!topDecision?.id) {
@@ -93,7 +93,9 @@ export default function DecisionExecutionBanner({
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-slate-700 dark:text-slate-200">Confidence Score</span>
               <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-[#eff6ff] text-[#2563eb]">
-                {Math.round((topDecision?.confidence_score || 0.95) * 100)}%
+                {topDecision?.confidence_score !== undefined && topDecision?.confidence_score !== null
+                  ? `${Math.round(topDecision.confidence_score * 100)}%`
+                  : "—"}
               </span>
             </div>
           </div>

@@ -104,7 +104,7 @@ export default function ScenarioBar({ onRefresh, killSwitchActive, onKillSwitchC
   };
 
   return (
-    <div className="netic-card p-4 space-y-3">
+    <div className="netic-card console-controls p-4 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center space-x-2">
           <div className="w-7 h-7 rounded-lg bg-[#f5f3ff] text-[#635bff] flex items-center justify-center">

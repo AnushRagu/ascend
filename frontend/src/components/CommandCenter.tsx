@@ -1,173 +1,51 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  ShoppingBag,
-  ShoppingCart,
-  TrendingDown,
-  CheckCircle2,
-  MoreVertical,
-} from "lucide-react";
-import CircularProgressArc from "@/components/CircularProgressArc";
+import React from "react";
+import { Activity, ArrowDownRight, ArrowUpRight, CircleDollarSign, Gauge, Radio, ShieldCheck, Wallet } from "lucide-react";
 import StackedLifetimeSalesChart from "@/components/StackedLifetimeSalesChart";
-import GeographyCard from "@/components/GeographyCard";
 import DecisionExecutionBanner from "@/components/DecisionExecutionBanner";
 
-interface CommandCenterProps {
-  kpis: any;
-  timeseries: any[];
-  inventory: any[];
-  topDecision?: any;
-  onRefresh?: () => void;
-}
+interface Props { kpis: any; timeseries: any[]; inventory: any; topDecision?: any; anomalies?: any[]; decisions?: any[]; onRefresh?: () => void }
+const currency = (value: number) => `$${Math.round(value || 0).toLocaleString("en-US")}`;
 
-export default function CommandCenter({
-  kpis,
-  timeseries,
-  inventory,
-  topDecision,
-  onRefresh,
-}: CommandCenterProps) {
-  // Format numbers cleanly with Rupee or Dollar sign
-  const formatCurrency = (val: number) => {
-    return `$${Math.round(val || 0).toLocaleString("en-US")}`;
-  };
+export default function CommandCenter({ kpis, timeseries, inventory, topDecision, anomalies = [], decisions = [], onRefresh }: Props) {
+  const inventoryItems = Array.isArray(inventory) ? inventory : inventory?.inventory || [];
+  const metrics = [
+    { label: "Gross revenue", value: currency(kpis?.total_revenue_daily), detail: "Projected daily", icon: CircleDollarSign, tone: "teal", change: "Business state" },
+    { label: "Net contribution", value: currency(kpis?.net_contribution_margin), detail: `${kpis?.net_contribution_margin_pct ?? 0}% contribution rate`, icon: Activity, tone: "violet", change: "Unit economics" },
+    { label: "Paid media spend", value: currency(kpis?.total_ad_spend_daily), detail: `${kpis?.active_campaign_count ?? 0} active campaigns`, icon: Wallet, tone: "amber", change: "Across channels" },
+    { label: "Blended ROAS", value: `${kpis?.blended_roas ?? 0}×`, detail: `MER ${kpis?.blended_mer ?? 0}×`, icon: Gauge, tone: "blue", change: "Efficiency" },
+  ];
+  const criticalInventory = inventoryItems.filter((item: any) => item.status === "CRITICAL").length;
 
-  const revenueVal = kpis?.total_revenue_daily ?? 9810;
-  const netProfitVal = kpis?.net_contribution_margin ?? 3802;
-  const adSpendVal = kpis?.total_ad_spend_daily ?? 3100;
-  const roasVal = kpis?.blended_roas ? `${kpis.blended_roas}x` : "3.16x";
-  const profitMarginPct = kpis?.net_contribution_margin_pct ?? 38.8;
-
-  return (
-    <div className="space-y-6">
-      {/* Row of 4 Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {/* Card 1: Total Revenue / Total Sales */}
-        <div className="netic-card p-5 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl bg-[#fff7ed] dark:bg-[#7c2d12]/30 flex items-center justify-center text-[#f97316]">
-              <ShoppingBag className="w-5 h-5" />
-            </div>
-            <button className="text-slate-300 dark:text-slate-600 hover:text-slate-500 transition">
-              <MoreVertical className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center space-x-2">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Revenue</span>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#ffedd5] text-[#ea580c]">
-                  Daily Active
-                </span>
-              </div>
-              <div className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                {formatCurrency(revenueVal)}
-              </div>
-            </div>
-
-            <CircularProgressArc percentage={68} color="#f97316" size={62} strokeWidth={5} />
-          </div>
-        </div>
-
-        {/* Card 2: Net Contribution Margin / Profit */}
-        <div className="netic-card p-5 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl bg-[#eff6ff] dark:bg-[#1e3a8a]/30 flex items-center justify-center text-[#3b82f6]">
-              <ShoppingCart className="w-5 h-5" />
-            </div>
-            <button className="text-slate-300 dark:text-slate-600 hover:text-slate-500 transition">
-              <MoreVertical className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center space-x-2">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Net Profit</span>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#dbeafe] text-[#2563eb]">
-                  {profitMarginPct}% Margin
-                </span>
-              </div>
-              <div className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                {formatCurrency(netProfitVal)}
-              </div>
-            </div>
-
-            <CircularProgressArc percentage={Math.min(100, Math.round(profitMarginPct * 2))} color="#3b82f6" size={62} strokeWidth={5} />
-          </div>
-        </div>
-
-        {/* Card 3: Ad Spend */}
-        <div className="netic-card p-5 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl bg-[#fff1f2] dark:bg-[#881337]/30 flex items-center justify-center text-[#f43f5e]">
-              <TrendingDown className="w-5 h-5" />
-            </div>
-            <button className="text-slate-300 dark:text-slate-600 hover:text-slate-500 transition">
-              <MoreVertical className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center space-x-2">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Ad Spend</span>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#ffe4e6] text-[#e11d48]">
-                  {kpis?.active_campaign_count ?? 4} Active
-                </span>
-              </div>
-              <div className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                {formatCurrency(adSpendVal)}
-              </div>
-            </div>
-
-            <CircularProgressArc percentage={55} color="#f43f5e" size={62} strokeWidth={5} />
-          </div>
-        </div>
-
-        {/* Card 4: Blended ROAS */}
-        <div className="netic-card p-5 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl bg-[#f0fdf4] dark:bg-[#064e3b]/30 flex items-center justify-center text-[#10b981]">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-            <button className="text-slate-300 dark:text-slate-600 hover:text-slate-500 transition">
-              <MoreVertical className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center space-x-2">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Blended ROAS</span>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#dcfce7] text-[#16a34a]">
-                  MER {kpis?.blended_mer ?? "2.91"}
-                </span>
-              </div>
-              <div className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                {roasVal}
-              </div>
-            </div>
-
-            <CircularProgressArc percentage={Math.min(100, Math.round((kpis?.blended_roas || 3.16) * 22))} color="#10b981" size={62} strokeWidth={5} />
-          </div>
-        </div>
-      </div>
-
-      {/* Middle Row: Lifetime Sales (Stacked Bars) & Geography */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        <div className="lg:col-span-8">
-          <StackedLifetimeSalesChart timeseries={timeseries} />
-        </div>
-        <div className="lg:col-span-4">
-          <GeographyCard />
-        </div>
-      </div>
-
-      {/* Bottom Row: The Decision Execution Banner */}
-      <DecisionExecutionBanner topDecision={topDecision} onRefresh={onRefresh} />
+  return <div className="command-center space-y-5">
+    <div className="state-strip">
+      <div className="state-intro"><div className="state-orb"><Radio size={17}/></div><div><div className="eyebrow">BUSINESS STATE</div><strong>Autonomy monitor</strong></div></div>
+      <div className="state-item"><span>Signals</span><b className={anomalies.length ? "text-rose" : ""}>{anomalies.length} active</b></div>
+      <div className="state-item"><span>Decisions</span><b>{decisions.filter((d) => d.status === "pending_approval").length} awaiting review</b></div>
+      <div className="state-item"><span>Inventory risk</span><b className={criticalInventory ? "text-amber" : ""}>{criticalInventory ? `${criticalInventory} critical` : "Within guardrails"}</b></div>
+      <div className="state-protected"><ShieldCheck size={15}/> Guardrails active</div>
     </div>
-  );
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+      {metrics.map(({ label, value, detail, icon: Icon, tone, change }) => <article key={label} className={`netic-card kpi-card kpi-${tone}`}>
+        <div className="kpi-top"><span className="kpi-icon"><Icon size={17}/></span><span className="kpi-change"><ArrowUpRight size={13}/>{change}</span></div>
+        <div className="kpi-label">{label}</div><div className="kpi-value">{value}</div><div className="kpi-detail">{detail}</div>
+      </article>)}
+    </div>
+
+    <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
+      <div className="xl:col-span-8"><StackedLifetimeSalesChart timeseries={timeseries} anomalies={anomalies} decisions={decisions}/></div>
+      <div className="xl:col-span-4"><div className="netic-card channel-card h-full">
+        <div className="eyebrow">ALLOCATION MIX</div><h2>Channel exposure</h2><p className="channel-subtitle">Daily budget under management</p>
+        {Object.entries(kpis?.channel_spend_breakdown || {}).map(([channel, amount], index) => {
+          const value = Number(amount || 0); const total = Number(kpis?.total_ad_spend_daily || 1); const colors = ["#65d8d0", "#b29cff", "#f2ad69"];
+          return <div key={channel} className="channel-row"><div className="channel-row-label"><span className="channel-mark" style={{ background: colors[index % colors.length] }}/><span>{channel}</span><b>{currency(value)}</b></div><div className="channel-track"><span style={{ width: `${Math.min(100, value / total * 100)}%`, background: colors[index % colors.length] }}/></div></div>;
+        })}
+        <div className="channel-total"><span>Total active allocation</span><strong>{currency(kpis?.total_ad_spend_daily)}</strong></div>
+        <div className="channel-note"><ArrowDownRight size={14}/> Spend levels reflect current campaign budgets</div>
+      </div></div>
+    </div>
+    <DecisionExecutionBanner topDecision={topDecision} onRefresh={onRefresh}/>
+  </div>;
 }
