@@ -1,4 +1,7 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+const isBrowser = typeof window !== "undefined";
+const API_BASE = isBrowser
+  ? "/api/v1"
+  : (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1");
 
 export async function fetchKPIs() {
   const res = await fetch(`${API_BASE}/analytics/kpis`, { cache: "no-store" });
@@ -12,9 +15,41 @@ export async function fetchTimeseries() {
   return res.json();
 }
 
+export async function fetchGeography() {
+  const res = await fetch(`${API_BASE}/analytics/geography`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch geography");
+  return res.json();
+}
+
 export async function fetchInventory() {
-  const res = await fetch(`${API_BASE}/analytics/inventory`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/inventory`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch inventory");
+  return res.json();
+}
+
+export async function adjustStock(skuId: string, newStock: number, reason: string = "Manual warehouse restock") {
+  const res = await fetch(`${API_BASE}/inventory/${skuId}/adjust-stock`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ new_stock: newStock, reason }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to adjust stock");
+  }
+  return res.json();
+}
+
+export async function adjustVelocity(skuId: string, salesVelocity7d: number) {
+  const res = await fetch(`${API_BASE}/inventory/${skuId}/adjust-velocity`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sales_velocity_7d: salesVelocity7d }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to adjust velocity");
+  }
   return res.json();
 }
 
@@ -30,6 +65,12 @@ export async function fetchDecisions(tier?: string, status?: string) {
   return res.json();
 }
 
+export async function fetchLatestCycle() {
+  const res = await fetch(`${API_BASE}/decisions/latest-cycle`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch latest cycle");
+  return res.json();
+}
+
 export async function runDecisionCycle() {
   const res = await fetch(`${API_BASE}/decisions/run-cycle`, { method: "POST" });
   if (!res.ok) throw new Error("Failed to run decision cycle");
@@ -41,6 +82,19 @@ export async function approveDecision(id: string) {
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail || "Failed to approve decision");
+  }
+  return res.json();
+}
+
+export async function modifyDecision(id: string, payload: { new_budget: number; target_sku_id?: string }) {
+  const res = await fetch(`${API_BASE}/decisions/${id}/modify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to modify decision");
   }
   return res.json();
 }
@@ -109,6 +163,16 @@ export async function triggerScenario(scenarioId: string) {
     body: JSON.stringify({ scenario_id: scenarioId }),
   });
   if (!res.ok) throw new Error("Failed to trigger scenario");
+  return res.json();
+}
+
+export async function fastForwardSimulator(hours: number) {
+  const res = await fetch(`${API_BASE}/simulator/fast-forward`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ hours }),
+  });
+  if (!res.ok) throw new Error("Failed to fast-forward simulator");
   return res.json();
 }
 

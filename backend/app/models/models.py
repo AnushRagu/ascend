@@ -110,6 +110,23 @@ class MetricRecord(Base):
     mer = Column(Float, default=0.0) # Net Rev / Spend
     roas = Column(Float, default=0.0) # Gross Rev / Spend
 
+class CycleRunRecord(Base):
+    __tablename__ = "cycle_run_records"
+
+    id = Column(String, primary_key=True, index=True)
+    started_at = Column(DateTime, default=datetime.utcnow, index=True)
+    completed_at = Column(DateTime, nullable=True)
+    status = Column(String, default="RUNNING") # RUNNING, COMPLETED, FAILED
+    stages_log = Column(JSON, default=list) # List of completed lifecycle stages with timestamps
+    anomalies_detected = Column(Integer, default=0)
+    root_causes_evaluated = Column(Integer, default=0)
+    opportunities_discovered = Column(Integer, default=0)
+    decisions_generated = Column(Integer, default=0)
+    tier1_auto_executed = Column(Integer, default=0)
+    tier2_pending_approval = Column(Integer, default=0)
+    tier3_escalated = Column(Integer, default=0)
+    summary_message = Column(Text, nullable=True)
+
 class AnomalyRecord(Base):
     __tablename__ = "anomaly_records"
 
@@ -118,13 +135,16 @@ class AnomalyRecord(Base):
     channel = Column(SQLEnum(ChannelEnum), nullable=False)
     campaign_id = Column(String, ForeignKey("campaigns.id"), nullable=True)
     sku_id = Column(String, ForeignKey("product_skus.id"), nullable=True)
-    anomaly_type = Column(String, nullable=False) # CREATIVE_FATIGUE, STOCKOUT_RISK, CPM_SPIKE, MARGIN_COMPRESSION
+    anomaly_type = Column(String, nullable=False) # CREATIVE_FATIGUE, STOCKOUT_HAZARD, CROSS_CHANNEL_DISPARITY, MARGIN_COMPRESSION
     severity = Column(SQLEnum(AnomalySeverityEnum), default=AnomalySeverityEnum.MEDIUM)
     metric_name = Column(String, nullable=False)
     current_value = Column(Float, nullable=False)
     baseline_value = Column(Float, nullable=False)
+    deviation_pct = Column(Float, default=0.0)
     z_score = Column(Float, default=0.0)
+    detector_name = Column(String, default="Rolling Z-score") # "Rolling Z-score", "IQR", "CUSUM", "Policy Threshold"
     root_cause_summary = Column(Text, nullable=False)
+    evidence_package = Column(JSON, nullable=True) # Structured evidence signals
     is_resolved = Column(Boolean, default=False)
 
     campaign = relationship("Campaign")
@@ -134,6 +154,7 @@ class DecisionRecord(Base):
     __tablename__ = "decision_records"
 
     id = Column(String, primary_key=True, index=True)
+    cycle_id = Column(String, nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     executed_at = Column(DateTime, nullable=True)
     tier = Column(SQLEnum(AutonomyTierEnum), nullable=False, index=True)
@@ -145,17 +166,23 @@ class DecisionRecord(Base):
     delta_budget_abs = Column(Float, default=0.0)
     new_budget = Column(Float, default=0.0)
     target_channel = Column(SQLEnum(ChannelEnum), nullable=True)
+    target_sku_id = Column(String, ForeignKey("product_skus.id"), nullable=True)
+    alternative_sku_id = Column(String, ForeignKey("product_skus.id"), nullable=True)
     proposed_by = Column(String, default="ASCEND_AUTONOMOUS_ENGINE")
     rationale = Column(Text, nullable=False)
     confidence_score = Column(Float, default=0.90) # 0.0 - 1.0
     risk_score = Column(Float, default=0.20)       # 0.0 - 1.0
     predicted_mer_lift = Column(Float, default=0.15)  # Expected +15% MER
     predicted_roas_lift = Column(Float, default=0.20) # Expected +20% ROAS
+    expected_contribution_profit = Column(Float, default=0.0) # Absolute $ / day
+    guardrails_evaluated = Column(JSON, default=list) # List of checks e.g. [{"name": "budget_limit", "passed": True}]
     rollback_payload = Column(JSON, nullable=True)   # Atomic payload to undo mutation
     rejection_reason = Column(String, nullable=True)
 
     anomaly = relationship("AnomalyRecord")
     campaign = relationship("Campaign")
+    target_sku = relationship("ProductSKU", foreign_keys=[target_sku_id])
+    alternative_sku = relationship("ProductSKU", foreign_keys=[alternative_sku_id])
     outcomes = relationship("OutcomeMeasurement", back_populates="decision", cascade="all, delete-orphan")
 
 class OutcomeMeasurement(Base):

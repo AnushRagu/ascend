@@ -10,13 +10,13 @@ import {
   AlertTriangle,
   ArrowRight,
   TrendingUp,
-  Percent,
   Check,
   X,
   Clock,
   Lock,
+  Edit2,
 } from "lucide-react";
-import { approveDecision, rejectDecision, rollbackDecision } from "@/lib/api";
+import { approveDecision, rejectDecision, rollbackDecision, modifyDecision } from "@/lib/api";
 
 interface DecisionInboxProps {
   decisions: any[];
@@ -50,6 +50,27 @@ export default function DecisionInbox({ decisions, onRefresh, killSwitchActive }
     }
   };
 
+  const handleEdit = async (d: any) => {
+    const input = prompt(`Enter new daily budget for ${d.campaign_name}:`, String(d.new_budget));
+    if (input === null) return;
+    const newBudget = parseFloat(input);
+    if (isNaN(newBudget) || newBudget < 0) {
+      alert("Invalid budget entered.");
+      return;
+    }
+    setLoadingAction(d.id);
+    setActionMessage(null);
+    try {
+      const res = await modifyDecision(d.id, { new_budget: newBudget });
+      setActionMessage(`Modified decision to $${res.new_budget}/day (Tier: ${res.tier}). Guardrails re-evaluated.`);
+      onRefresh();
+    } catch (e: any) {
+      setActionMessage(`Modification failed: ${e.message}`);
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
   const handleReject = async (id: string) => {
     const reason = prompt("Enter operator rejection reason:") || "Manual rejection by media buyer";
     setLoadingAction(id);
@@ -71,7 +92,7 @@ export default function DecisionInbox({ decisions, onRefresh, killSwitchActive }
     setActionMessage(null);
     try {
       const res = await rollbackDecision(id);
-      setActionMessage(`Rollback successful! Restored campaign budget to $${res.restored_budget}.`);
+      setActionMessage(`Rollback successful! Restored campaign budget to $${res.restored_budget} (${res.restored_status}).`);
       onRefresh();
     } catch (e: any) {
       setActionMessage(`Rollback failed: ${e.message}`);
@@ -84,20 +105,20 @@ export default function DecisionInbox({ decisions, onRefresh, killSwitchActive }
     switch (tier) {
       case "tier_1_auto":
         return (
-          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#dcfce7] text-[#16a34a] border border-[#bbf7d0]">
             <Zap className="w-3 h-3 mr-1" /> TIER 1: AUTONOMOUS
           </span>
         );
       case "tier_2_approval":
         return (
-          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#f5f3ff] text-[#635bff] border border-[#e2dcff]">
             <Shield className="w-3 h-3 mr-1" /> TIER 2: 1-CLICK APPROVAL
           </span>
         );
       case "tier_3_escalate":
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#ffe4e6] text-[#e11d48] border border-[#fecdd3]">
             <Lock className="w-3 h-3 mr-1" /> TIER 3: MANDATORY ESCALATION
           </span>
         );
@@ -107,15 +128,15 @@ export default function DecisionInbox({ decisions, onRefresh, killSwitchActive }
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "auto_executed":
-        return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Auto-Executed</span>;
+        return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">Auto-Executed</span>;
       case "executed":
-        return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/30">Approved & Executed</span>;
+        return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-600 border border-blue-200">Approved & Executed</span>;
       case "pending_approval":
-        return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30 animate-pulse">Needs Review</span>;
+        return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-600 border border-amber-200 animate-pulse">Needs Review</span>;
       case "rolled_back":
-        return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-500/20 text-slate-400 border border-slate-600">Rolled Back</span>;
+        return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">Rolled Back</span>;
       case "rejected":
-        return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/30">Rejected</span>;
+        return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-600 border border-rose-200">Rejected</span>;
       default:
         return null;
     }
@@ -125,8 +146,8 @@ export default function DecisionInbox({ decisions, onRefresh, killSwitchActive }
     <div className="space-y-6">
       {/* Kill switch banner if active */}
       {killSwitchActive && (
-        <div className="p-4 rounded-xl bg-rose-500/15 border border-rose-500/50 flex items-center space-x-3 text-rose-200">
-          <AlertTriangle className="w-5 h-5 text-rose-400 flex-shrink-0" />
+        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-center space-x-3 text-rose-800">
+          <AlertTriangle className="w-5 h-5 text-rose-500 flex-shrink-0" />
           <div className="text-xs">
             <strong className="font-bold">GLOBAL EXECUTION KILL SWITCH IS ACTIVE:</strong> All automatic executions across Meta, Google, and Amazon APIs are currently suspended. All actions require manual review or hold.
           </div>
@@ -135,16 +156,16 @@ export default function DecisionInbox({ decisions, onRefresh, killSwitchActive }
 
       {/* Action Notification */}
       {actionMessage && (
-        <div className="p-3 rounded-lg bg-indigo-950/70 border border-indigo-700 text-xs text-indigo-200 flex items-center justify-between">
-          <span>{actionMessage}</span>
-          <button onClick={() => setActionMessage(null)} className="text-indigo-400 hover:text-white">
+        <div className="p-3.5 rounded-xl bg-[#f5f3ff] border border-[#e2dcff] text-xs text-[#635bff] flex items-center justify-between">
+          <span className="font-medium">{actionMessage}</span>
+          <button onClick={() => setActionMessage(null)} className="text-slate-400 hover:text-slate-600">
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* Filter Tabs */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
         {/* Tier Filter */}
         <div className="flex items-center space-x-2">
           <span className="text-xs text-slate-400 font-medium mr-1">Autonomy Tier:</span>
@@ -157,10 +178,10 @@ export default function DecisionInbox({ decisions, onRefresh, killSwitchActive }
             <button
               key={tab.id}
               onClick={() => setSelectedTier(tab.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
                 selectedTier === tab.id
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                  : "bg-slate-800/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                  ? "bg-[#635bff] text-white shadow-sm"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900"
               }`}
             >
               {tab.label}
@@ -175,10 +196,10 @@ export default function DecisionInbox({ decisions, onRefresh, killSwitchActive }
             <button
               key={st}
               onClick={() => setSelectedStatus(st)}
-              className={`px-2.5 py-1 rounded text-xs transition ${
+              className={`px-2.5 py-1 rounded-lg text-xs transition ${
                 selectedStatus === st
-                  ? "bg-slate-700 text-white font-medium"
-                  : "text-slate-400 hover:text-slate-300"
+                  ? "bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white font-semibold"
+                  : "text-slate-500 hover:text-slate-800 dark:text-slate-400"
               }`}
             >
               {st === "ALL" ? "All" : st.replace("_", " ")}
@@ -190,27 +211,27 @@ export default function DecisionInbox({ decisions, onRefresh, killSwitchActive }
       {/* Decision Cards List */}
       <div className="space-y-4">
         {filteredDecisions.length === 0 ? (
-          <div className="glass-panel p-12 text-center rounded-xl border border-slate-800 space-y-2">
-            <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto" />
-            <h4 className="text-sm font-semibold text-slate-300">All decision queues are clear</h4>
-            <p className="text-xs text-slate-500">
-              No decisions match the current filter criteria. Trigger an event from the top simulator bar or run an autonomous cycle.
+          <div className="netic-card p-12 text-center space-y-2">
+            <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
+            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">All decision queues are clear</h4>
+            <p className="text-xs text-slate-400">
+              No decisions match the current filter criteria. Run an autonomous cycle or inject a scenario to generate recommendations.
             </p>
           </div>
         ) : (
           filteredDecisions.map((d) => (
             <div
               key={d.id}
-              className="glass-panel glass-panel-hover p-6 rounded-xl border border-slate-800 space-y-4"
+              className="netic-card p-6 space-y-4 hover:shadow-md transition-shadow"
             >
               {/* Header row */}
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center space-x-2.5">
                   {getTierBadge(d.tier)}
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                     {d.channel}
                   </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-800/80 text-indigo-300">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#f5f3ff] text-[#635bff]">
                     {d.action_type.replace("_", " ")}
                   </span>
                   {getStatusBadge(d.status)}
@@ -224,28 +245,30 @@ export default function DecisionInbox({ decisions, onRefresh, killSwitchActive }
 
               {/* Campaign Title & Target SKU */}
               <div>
-                <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center space-x-2">
                   <span>{d.campaign_name}</span>
                 </h3>
-                <div className="text-xs text-slate-400 mt-0.5">
-                  Target Product: <span className="text-slate-200 font-medium">{d.target_sku}</span>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Target Product: <span className="text-slate-700 dark:text-slate-300 font-medium">{d.target_sku}</span>
                 </div>
               </div>
 
               {/* Action Shift Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-lg bg-slate-900/90 border border-slate-800/80">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
                 <div>
-                  <div className="text-[11px] text-slate-400">Current Spend Allocation</div>
-                  <div className="text-lg font-bold text-slate-300 font-mono">${d.current_budget.toLocaleString()}/day</div>
+                  <div className="text-[11px] font-medium text-slate-400">Current Spend Allocation</div>
+                  <div className="text-lg font-bold text-slate-800 dark:text-slate-200 font-mono">
+                    ${d.current_budget?.toLocaleString()}/day
+                  </div>
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <ArrowRight className="w-4 h-4 text-slate-400" />
+                  <ArrowRight className="w-4 h-4 text-slate-300" />
                   <div>
-                    <div className="text-[11px] text-slate-400">Recommended Allocation</div>
-                    <div className="text-lg font-bold text-indigo-400 font-mono">
-                      ${d.new_budget.toLocaleString()}/day
-                      <span className={`text-xs ml-1.5 font-semibold ${d.delta_budget_pct > 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                    <div className="text-[11px] font-medium text-slate-400">Recommended Allocation</div>
+                    <div className="text-lg font-bold text-[#635bff] font-mono">
+                      ${d.new_budget?.toLocaleString()}/day
+                      <span className={`text-xs ml-1.5 font-semibold ${d.delta_budget_pct > 0 ? "text-emerald-500" : "text-rose-500"}`}>
                         ({d.delta_budget_pct > 0 ? "+" : ""}{d.delta_budget_pct}%)
                       </span>
                     </div>
@@ -253,38 +276,54 @@ export default function DecisionInbox({ decisions, onRefresh, killSwitchActive }
                 </div>
 
                 <div>
-                  <div className="text-[11px] text-slate-400">Projected Margin & ROAS Lift</div>
-                  <div className="text-sm font-semibold text-emerald-400 flex items-center mt-1">
+                  <div className="text-[11px] font-medium text-slate-400">Projected Margin & ROAS Lift</div>
+                  <div className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 flex items-center mt-1">
                     <TrendingUp className="w-3.5 h-3.5 mr-1" />
-                    +{Math.round(d.predicted_mer_lift * 100)}% MER / +{Math.round(d.predicted_roas_lift * 100)}% ROAS
+                    +{Math.round((d.predicted_mer_lift || 0.12) * 100)}% MER / +{Math.round((d.predicted_roas_lift || 0.15) * 100)}% ROAS
                   </div>
                 </div>
               </div>
 
               {/* Rationale & Diagnosis */}
-              <div className="text-xs text-slate-300 bg-slate-950/40 p-3.5 rounded-lg border border-slate-800/60 leading-relaxed">
-                <span className="font-semibold text-indigo-300 uppercase tracking-wide text-[10px] block mb-1">
+              <div className="text-xs text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-100 dark:border-slate-700 leading-relaxed shadow-sm">
+                <span className="font-bold text-[#635bff] uppercase tracking-wider text-[10px] block mb-1">
                   Root Cause Diagnosis & AI Rationale:
                 </span>
                 {d.rationale}
               </div>
 
+              {/* Guardrails Evaluated Breakdown */}
+              {d.guardrails_evaluated && d.guardrails_evaluated.length > 0 && (
+                <div className="text-xs p-3 rounded-xl bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 space-y-1.5">
+                  <div className="font-bold text-[10px] uppercase tracking-wider text-slate-400">
+                    Policy Guardrails Evaluated:
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    {d.guardrails_evaluated.map((g: any, gIdx: number) => (
+                      <div key={gIdx} className="flex items-center space-x-1.5 text-[11px]">
+                        <span className={`w-2 h-2 rounded-full ${g.passed ? "bg-emerald-500" : "bg-rose-500"}`} />
+                        <span className="font-medium text-slate-700 dark:text-slate-300">{g.name}:</span>
+                        <span className="text-slate-500 dark:text-slate-400">{g.detail}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Confidence & Risk Bar + Action Buttons */}
-              <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-800/70">
+              <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <div className="flex items-center space-x-6 text-xs">
-                  {/* Confidence */}
                   <div>
                     <span className="text-slate-400 mr-1.5">Confidence:</span>
-                    <span className="font-bold text-emerald-400 font-mono">
-                      {Math.round(d.confidence_score * 100)}%
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                      {Math.round((d.confidence_score || 0.85) * 100)}%
                     </span>
                   </div>
 
-                  {/* Risk */}
                   <div>
                     <span className="text-slate-400 mr-1.5">Risk Score:</span>
-                    <span className={`font-bold font-mono ${d.risk_score > 0.4 ? "text-amber-400" : "text-slate-300"}`}>
-                      {Math.round(d.risk_score * 100)}%
+                    <span className={`font-bold font-mono ${d.risk_score > 0.4 ? "text-amber-500" : "text-slate-600 dark:text-slate-300"}`}>
+                      {Math.round((d.risk_score || 0.20) * 100)}%
                     </span>
                   </div>
                 </div>
@@ -294,16 +333,24 @@ export default function DecisionInbox({ decisions, onRefresh, killSwitchActive }
                   {d.status === "pending_approval" && (
                     <>
                       <button
+                        onClick={() => handleEdit(d)}
+                        disabled={loadingAction === d.id}
+                        className="flex items-center space-x-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 transition"
+                      >
+                        <Edit2 className="w-3 h-3 mr-0.5" />
+                        <span>Modify</span>
+                      </button>
+                      <button
                         onClick={() => handleReject(d.id)}
                         disabled={loadingAction === d.id}
-                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
+                        className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 transition"
                       >
                         Reject
                       </button>
                       <button
                         onClick={() => handleApprove(d.id)}
                         disabled={loadingAction === d.id || killSwitchActive}
-                        className="flex items-center space-x-1 px-4 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-lg shadow-indigo-600/30 disabled:opacity-50"
+                        className="flex items-center space-x-1.5 px-5 py-1.5 rounded-full text-xs font-bold bg-[#635bff] hover:bg-[#5248e8] text-white transition shadow-md shadow-indigo-500/25 disabled:opacity-50"
                       >
                         <Check className="w-3.5 h-3.5" />
                         <span>{loadingAction === d.id ? "Executing..." : "Approve & Execute (1-Click)"}</span>
@@ -315,7 +362,7 @@ export default function DecisionInbox({ decisions, onRefresh, killSwitchActive }
                     <button
                       onClick={() => handleRollback(d.id)}
                       disabled={loadingAction === d.id}
-                      className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/40 transition"
+                      className="flex items-center space-x-1 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 transition"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
                       <span>{loadingAction === d.id ? "Reverting..." : "1-Click Rollback"}</span>

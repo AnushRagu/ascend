@@ -6,7 +6,7 @@ import logging
 from app.config import settings
 from app.database import engine, Base, AsyncSessionLocal
 from app.connectors.simulator import ScenarioSimulator
-from app.routers import analytics, decisions, anomalies, policies, outcomes, simulator
+from app.routers import analytics, decisions, anomalies, policies, outcomes, simulator, inventory
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("ascend")
@@ -43,6 +43,7 @@ app.add_middleware(
 
 # Register routers
 app.include_router(analytics.router, prefix=settings.API_V1_STR)
+app.include_router(inventory.router, prefix=settings.API_V1_STR)
 app.include_router(decisions.router, prefix=settings.API_V1_STR)
 app.include_router(anomalies.router, prefix=settings.API_V1_STR)
 app.include_router(policies.router, prefix=settings.API_V1_STR)
