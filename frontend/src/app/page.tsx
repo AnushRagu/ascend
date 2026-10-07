@@ -11,8 +11,6 @@ import {
   fetchOutcomes,
 } from "@/lib/api";
 import Sidebar from "@/components/Sidebar";
-import TopHeader from "@/components/TopHeader";
-import ScenarioBar from "@/components/ScenarioBar";
 import CommandCenter from "@/components/CommandCenter";
 import DecisionInbox from "@/components/DecisionInbox";
 import AnomalyExplorer from "@/components/AnomalyExplorer";
@@ -94,10 +92,14 @@ export default function AscendApp() {
   const topPendingDecision = decisions.find((d) => d.status === "pending_approval") || decisions[0];
 
   return (
-    <div className={`ascend-app min-h-screen p-2.5 sm:p-5 transition-colors duration-250 ${isDark ? "bg-[#050507]" : "bg-[#f4f3f9]"}`}>
+    <div
+      className={`ascend-app min-h-screen p-2.5 sm:p-5 transition-colors duration-250 ${
+        isDark ? "bg-[#050507]" : "bg-[#f4f3f9]"
+      }`}
+    >
       {/* Outer Shell with pure black and purple border depth */}
-      <div className="netic-outer-shell max-w-[1600px] mx-auto min-h-[94vh] flex flex-col md:flex-row bg-white dark:bg-[#08080c] overflow-hidden border border-purple-500/15 dark:border-purple-500/20 shadow-2xl">
-        {/* Left Sidebar */}
+      <div className="netic-outer-shell max-w-[1600px] mx-auto min-h-[94vh] flex flex-col md:flex-row bg-white dark:bg-[#08080c] overflow-hidden border border-purple-500/15 dark:border-white/[0.08] shadow-2xl">
+        {/* Left Sidebar with integrated Simulator below Guardrails */}
         <Sidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -105,20 +107,13 @@ export default function AscendApp() {
           setIsDark={setIsDark}
           pendingCount={pendingDecisionsCount}
           anomalyCount={anomalies.length}
+          onRefresh={loadData}
+          killSwitchActive={killSwitchActive}
+          onKillSwitchChange={(val) => setKillSwitchActive(val)}
         />
 
         {/* Right Main Dashboard Area */}
         <main className="flex-1 flex flex-col min-w-0 p-5 sm:p-7 space-y-6 overflow-y-auto">
-          {/* Welcome Header */}
-          <TopHeader userName="Alex" dateStr={new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "2-digit", year: "numeric" })} />
-
-          {/* D2C Telemetry Scenario Bar */}
-          <ScenarioBar
-            onRefresh={loadData}
-            killSwitchActive={killSwitchActive}
-            onKillSwitchChange={(val) => setKillSwitchActive(val)}
-          />
-
           {/* Tab Views */}
           {activeTab === "command_center" && (
             <CommandCenter
