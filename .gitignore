@@ -1,0 +1,26 @@
+# Dependencies and virtual environments
+node_modules/
+.venv/
+venv/
+
+# Framework and build output
+.next/
+.next-*/
+dist/
+build/
+out/
+coverage/
+
+# Python generated files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local environment and logs
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
