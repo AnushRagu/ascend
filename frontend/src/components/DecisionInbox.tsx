@@ -15,8 +15,10 @@ import {
   Clock,
   Lock,
   Edit2,
+  Scale,
 } from "lucide-react";
-import { approveDecision, rejectDecision, rollbackDecision, modifyDecision } from "@/lib/api";
+import { approveDecision, rejectDecision, rollbackDecision, modifyDecision, fetchDecisionDebate } from "@/lib/api";
+import CouncilDebateModal from "@/components/CouncilDebateModal";
 
 interface DecisionInboxProps {
   decisions: any[];
@@ -30,6 +32,23 @@ export default function DecisionInbox({ decisions, onRefresh, killSwitchActive }
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [executingStep, setExecutingStep] = useState<Record<string, string>>({});
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [activeDebate, setActiveDebate] = useState<any>(null);
+  const [isDebateOpen, setIsDebateOpen] = useState<boolean>(false);
+
+  const handleInspectDebate = async (decision: any) => {
+    if (decision.council_debate) {
+      setActiveDebate(decision.council_debate);
+      setIsDebateOpen(true);
+    } else {
+      try {
+        const debate = await fetchDecisionDebate(decision.id);
+        setActiveDebate(debate);
+        setIsDebateOpen(true);
+      } catch (e) {
+        console.warn("Failed to fetch debate:", e);
+      }
+    }
+  };
 
   const filteredDecisions = decisions.filter((d) => {
     if (selectedTier !== "ALL" && d.tier !== selectedTier) return false;
@@ -261,9 +280,21 @@ export default function DecisionInbox({ decisions, onRefresh, killSwitchActive }
                   {getStatusBadge(d.status)}
                 </div>
 
-                <div className="text-[11px] text-purple-300/60 font-mono flex items-center space-x-1">
-                  <Clock className="w-3.5 h-3.5 text-purple-400" />
-                  <span>{d.created_at ? new Date(d.created_at).toLocaleTimeString() : "Just now"}</span>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleInspectDebate(d)}
+                    className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20 hover:bg-purple-500/20 transition flex items-center gap-1.5 shadow-sm"
+                    title="Inspect Multi-Agent Council Deliberation"
+                  >
+                    <Scale className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Council Debate</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  </button>
+
+                  <div className="text-[11px] text-purple-300/60 font-mono flex items-center space-x-1">
+                    <Clock className="w-3.5 h-3.5 text-purple-400" />
+                    <span>{d.created_at ? new Date(d.created_at).toLocaleTimeString() : "Just now"}</span>
+                  </div>
                 </div>
               </div>
 
@@ -428,6 +459,12 @@ export default function DecisionInbox({ decisions, onRefresh, killSwitchActive }
           ))
         )}
       </div>
+
+      <CouncilDebateModal
+        debate={activeDebate}
+        isOpen={isDebateOpen}
+        onClose={() => setIsDebateOpen(false)}
+      />
     </div>
   );
 }

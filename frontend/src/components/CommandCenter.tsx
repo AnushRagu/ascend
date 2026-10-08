@@ -10,6 +10,7 @@ import {
   Radio,
   ShieldCheck,
   Wallet,
+  Scale,
 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area } from "recharts";
 import StackedLifetimeSalesChart from "@/components/StackedLifetimeSalesChart";
@@ -316,6 +317,13 @@ export default function CommandCenter({
             <span className="text-slate-500 dark:text-white/60">Decisions:</span>
             <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-purple-500/10 dark:bg-white/[0.06] text-purple-700 dark:text-white border border-purple-500/20 dark:border-white/[0.1]">
               {decisions.filter((d) => d.status === "pending_approval").length} awaiting review
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-slate-500 dark:text-white/60">Council:</span>
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 flex items-center gap-1">
+              <Scale size={11} className="text-purple-400" />
+              <span>3-Agent Quorum Active</span>
             </span>
           </div>
           <div className="flex items-center space-x-2">

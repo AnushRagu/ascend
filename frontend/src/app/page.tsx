@@ -17,6 +17,7 @@ import AnomalyExplorer from "@/components/AnomalyExplorer";
 import OutcomeTracker from "@/components/OutcomeTracker";
 import PolicySettings from "@/components/PolicySettings";
 import InventoryManager from "@/components/InventoryManager";
+import WarRoom from "@/components/WarRoom";
 
 // Default fallback initial state for immediate instantaneous rendering
 const defaultInitialKPIs = {
@@ -33,7 +34,7 @@ const defaultInitialKPIs = {
 
 export default function AscendApp() {
   const [activeTab, setActiveTab] = useState<
-    "command_center" | "decision_inbox" | "inventory" | "anomaly_explorer" | "outcome_tracker" | "policy_settings"
+    "command_center" | "war_room" | "decision_inbox" | "inventory" | "anomaly_explorer" | "outcome_tracker" | "policy_settings"
   >("command_center");
 
   const [isDark, setIsDark] = useState<boolean>(true);
@@ -125,6 +126,10 @@ export default function AscendApp() {
               decisions={decisions}
               onRefresh={loadData}
             />
+          )}
+
+          {activeTab === "war_room" && (
+            <WarRoom onRefresh={loadData} />
           )}
 
           {activeTab === "decision_inbox" && (

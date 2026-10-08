@@ -81,9 +81,33 @@ async def list_decisions(
             "expected_contribution_profit": d.expected_contribution_profit,
             "guardrails_evaluated": d.guardrails_evaluated or [],
             "can_rollback": bool(d.rollback_payload and d.status in [DecisionStatusEnum.EXECUTED, DecisionStatusEnum.AUTO_EXECUTED]),
-            "rejection_reason": d.rejection_reason
+            "rejection_reason": d.rejection_reason,
+            "council_debate": d.council_debate
         })
     return output
+
+@router.get("/{decision_id}/debate")
+async def get_decision_council_debate(
+    decision_id: str,
+    db: AsyncSession = Depends(get_db)
+) -> Dict[str, Any]:
+    """Returns the full multi-agent council debate transcript and quorum votes for a decision."""
+    res = await db.execute(select(DecisionRecord).where(DecisionRecord.id == decision_id))
+    decision = res.scalars().first()
+    if not decision:
+        raise HTTPException(status_code=404, detail="Decision not found")
+    
+    if not decision.council_debate:
+        # Generate on-demand if legacy record didn't have one cached
+        camp_res = await db.execute(select(Campaign).where(Campaign.id == decision.campaign_id))
+        camp = camp_res.scalars().first()
+        from app.engine.council_engine import AutonomousCouncilEngine
+        debate = await AutonomousCouncilEngine.deliberate(campaign=camp)
+        decision.council_debate = debate
+        await db.commit()
+        return debate
+
+    return decision.council_debate
 
 @router.get("/latest-cycle")
 async def get_latest_cycle(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:

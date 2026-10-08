@@ -6,7 +6,7 @@ import logging
 from app.config import settings
 from app.database import engine, Base, AsyncSessionLocal
 from app.connectors.simulator import ScenarioSimulator
-from app.routers import analytics, decisions, anomalies, policies, outcomes, simulator, inventory
+from app.routers import analytics, decisions, anomalies, policies, outcomes, simulator, inventory, council, incidents
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("ascend")
@@ -49,6 +49,8 @@ app.include_router(anomalies.router, prefix=settings.API_V1_STR)
 app.include_router(policies.router, prefix=settings.API_V1_STR)
 app.include_router(outcomes.router, prefix=settings.API_V1_STR)
 app.include_router(simulator.router, prefix=settings.API_V1_STR)
+app.include_router(council.router, prefix=settings.API_V1_STR)
+app.include_router(incidents.router, prefix=settings.API_V1_STR)
 
 @app.get("/health")
 async def health_check():

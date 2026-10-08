@@ -215,3 +215,55 @@ export async function reseedSimulator() {
   if (!res.ok) throw new Error("Failed to reseed simulator");
   return res.json();
 }
+
+// Multi-Agent Council War Room APIs
+export async function fetchCouncilAgents() {
+  const res = await fetch(`${API_BASE}/council/agents`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch council agents");
+  return res.json();
+}
+
+export async function fetchRecentDebates() {
+  const res = await fetch(`${API_BASE}/council/recent`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch recent debates");
+  return res.json();
+}
+
+export async function fetchDecisionDebate(decisionId: string) {
+  const res = await fetch(`${API_BASE}/decisions/${decisionId}/debate`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch decision debate");
+  return res.json();
+}
+
+export async function simulateCouncilDebate(scenarioType: string = "STOCKOUT_HAZARD", campaignId?: string) {
+  const res = await fetch(`${API_BASE}/council/deliberate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ scenario_type: scenarioType, campaign_id: campaignId }),
+  });
+  if (!res.ok) throw new Error("Failed to simulate council debate");
+  return res.json();
+}
+
+// Advertising War Room Incidents APIs
+export async function fetchIncidents() {
+  const res = await fetch(`${API_BASE}/incidents`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch incidents");
+  return res.json();
+}
+
+export async function fetchIncidentDetail(incidentId: string) {
+  const res = await fetch(`${API_BASE}/incidents/${incidentId}`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch incident detail");
+  return res.json();
+}
+
+export async function mitigateIncident(incidentId: string, payload?: any) {
+  const res = await fetch(`${API_BASE}/incidents/${incidentId}/mitigate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload || { action_type: "FULL_CONTAINMENT" }),
+  });
+  if (!res.ok) throw new Error("Failed to mitigate incident");
+  return res.json();
+}

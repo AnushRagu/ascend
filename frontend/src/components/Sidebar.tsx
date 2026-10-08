@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Moon,
   Sun,
+  Scale,
 } from "lucide-react";
 import ScenarioBar from "@/components/ScenarioBar";
 
@@ -72,6 +73,25 @@ export default function Sidebar({
               <LayoutGrid className="w-4 h-4 text-purple-600 dark:text-white/80" />
               <span>Dashboard</span>
             </div>
+          </button>
+
+          {/* 1.5. War Room (Multi-Agent Deliberation Chamber) */}
+          <button
+            onClick={() => setActiveTab("war_room")}
+            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition ${
+              activeTab === "war_room"
+                ? "nav-liquid-btn active font-bold text-slate-900 dark:text-white bg-slate-200/50 dark:bg-white/[0.08]"
+                : "text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.05]"
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              <Scale className="w-4 h-4 text-purple-500 dark:text-purple-400" />
+              <span>War Room</span>
+            </div>
+            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-purple-500/15 text-purple-600 dark:text-purple-300 border border-purple-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Council</span>
+            </span>
           </button>
 
           {/* 2. Decisions / Approval Inbox */}

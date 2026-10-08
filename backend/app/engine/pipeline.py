@@ -14,6 +14,7 @@ from app.engine.budget_optimizer import BudgetOptimizer
 from app.engine.reasoning_agent import ReasoningAgent
 from app.engine.risk_evaluator import RiskEvaluator
 from app.engine.execution_dispatcher import ExecutionDispatcher
+from app.engine.council_engine import AutonomousCouncilEngine
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +139,16 @@ class DecisionPipeline:
 
             best_alt_id = budget_opt.get("alternative_sku", {}).get("id") if budget_opt.get("alternative_sku") else None
 
+            # Multi-Agent Council Deliberation (Growth vs Margin vs Supply Sentinel)
+            council_debate = await AutonomousCouncilEngine.deliberate(
+                campaign=camp,
+                anomaly=anom,
+                sku=sku,
+                budget_opt=budget_opt,
+                alternative_skus=all_skus,
+                policy=policy
+            )
+
             decision = DecisionRecord(
                 id=f"dec_{int(datetime.utcnow().timestamp())}_{uuid.uuid4().hex[:6]}",
                 cycle_id=cycle_id,
@@ -160,7 +171,8 @@ class DecisionPipeline:
                 predicted_mer_lift=pred_mer,
                 predicted_roas_lift=pred_roas,
                 expected_contribution_profit=expected_profit,
-                guardrails_evaluated=guardrails_eval
+                guardrails_evaluated=guardrails_eval,
+                council_debate=council_debate
             )
             self.session.add(decision)
             await self.session.commit()

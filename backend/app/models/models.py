@@ -179,6 +179,7 @@ class DecisionRecord(Base):
     guardrails_evaluated = Column(JSON, default=list) # List of checks e.g. [{"name": "budget_limit", "passed": True}]
     rollback_payload = Column(JSON, nullable=True)   # Atomic payload to undo mutation
     rejection_reason = Column(String, nullable=True)
+    council_debate = Column(JSON, nullable=True)     # Multi-Agent Council deliberation transcript & votes
 
     anomaly = relationship("AnomalyRecord")
     campaign = relationship("Campaign")
