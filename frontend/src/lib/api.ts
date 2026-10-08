@@ -267,3 +267,11 @@ export async function mitigateIncident(incidentId: string, payload?: any) {
   if (!res.ok) throw new Error("Failed to mitigate incident");
   return res.json();
 }
+
+export async function resetIncident(incidentId: string) {
+  const res = await fetch(`${API_BASE}/incidents/${incidentId}/reset`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to reset incident");
+  return res.json();
+}

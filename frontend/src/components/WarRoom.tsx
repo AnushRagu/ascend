@@ -10,9 +10,10 @@ import {
   CheckCircle2,
   Zap,
   Activity,
+  RotateCcw,
 } from "lucide-react";
 import IncidentRadarVisualizer from "@/components/IncidentRadarVisualizer";
-import { fetchIncidents, mitigateIncident } from "@/lib/api";
+import { fetchIncidents, mitigateIncident, resetIncident } from "@/lib/api";
 
 interface WarRoomProps {
   onRefresh?: () => void;
@@ -37,7 +38,9 @@ export default function WarRoom({ onRefresh = () => {} }: WarRoomProps) {
         setIncidents(list);
         const active = list.find((i: any) => i.id === selectedIncidentId) || list[0];
         setIncident(active);
-        setIsContained(active.status === "CONTAINED");
+        // By default, start with the active uncontained crisis for demo impact
+        setIsContained(false);
+        setContainmentSuccess(false);
       }
     } catch (e) {
       console.warn("Failed to fetch incidents:", e);
@@ -49,8 +52,19 @@ export default function WarRoom({ onRefresh = () => {} }: WarRoomProps) {
     const found = incidents.find((i) => i.id === id);
     if (found) {
       setIncident(found);
-      setIsContained(found.status === "CONTAINED");
-      setContainmentSuccess(found.status === "CONTAINED");
+      setIsContained(false);
+      setContainmentSuccess(false);
+    }
+  };
+
+  const handleResetCrisis = async () => {
+    if (incident?.id) {
+      await resetIncident(incident.id).catch(() => {});
+    }
+    setIsContained(false);
+    setContainmentSuccess(false);
+    if (incident) {
+      incident.status = "ACTIVE_INVESTIGATION";
     }
   };
 
@@ -185,6 +199,13 @@ export default function WarRoom({ onRefresh = () => {} }: WarRoomProps) {
               }`}
             >
               ⚡ Price War (#8093)
+            </button>
+            <button
+              onClick={handleResetCrisis}
+              className="p-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-white/60 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition"
+              title="Reset crisis to test deployment"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -360,12 +381,22 @@ export default function WarRoom({ onRefresh = () => {} }: WarRoomProps) {
           </div>
         </div>
 
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 flex items-center gap-2">
           {containmentSuccess ? (
-            <div className="px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>Incident Contained & Guarded</span>
-            </div>
+            <>
+              <div className="px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-2 shadow-sm">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>Incident Contained & Guarded</span>
+              </div>
+              <button
+                onClick={handleResetCrisis}
+                className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white transition border border-white/10 flex items-center gap-1.5 shadow-sm"
+                title="Re-open crisis to test live deployment again"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-slate-300" />
+                <span>Replay Crisis</span>
+              </button>
+            </>
           ) : (
             <button
               onClick={handleDeployProtocol}

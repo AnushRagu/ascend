@@ -187,16 +187,23 @@ async def mitigate_incident(incident_id: str, payload: IncidentMitigationPayload
     for inc in INCIDENTS_DATABASE:
         if inc["id"] == incident_id:
             inc["status"] = "CONTAINED"
-            inc["team_collaboration"].append({
-                "role": "Operator Action",
-                "author": "Operator Commander",
-                "time": datetime.utcnow().strftime("%H:%M"),
-                "note": f"⚡ Incident Contained: {payload.operator_note}. Runbook actions deployed across ad platforms and store."
-            })
             return {
                 "success": True,
                 "incident_id": incident_id,
                 "status": "CONTAINED",
                 "message": "Incident containment protocol successfully executed across all 23 campaigns."
+            }
+    raise HTTPException(status_code=404, detail="Incident not found")
+
+@router.post("/{incident_id}/reset")
+async def reset_incident(incident_id: str) -> Dict[str, Any]:
+    """Resets an incident back to the active crisis state for live evaluator demos."""
+    for inc in INCIDENTS_DATABASE:
+        if inc["id"] == incident_id:
+            inc["status"] = "ACTIVE_INVESTIGATION"
+            return {
+                "success": True,
+                "incident_id": incident_id,
+                "status": "ACTIVE_INVESTIGATION"
             }
     raise HTTPException(status_code=404, detail="Incident not found")
