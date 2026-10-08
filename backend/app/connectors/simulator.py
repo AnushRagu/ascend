@@ -19,6 +19,8 @@ class ScenarioSimulator:
         Seeds initial products, campaigns, ad sets, and 14 days of baseline telemetry.
         If force_reset is True, purges and restores deterministic baseline state.
         """
+        BASELINE_SKU_IDS = {"sku_lumen_serum", "sku_hydra_cream", "sku_spf_drops"}
+
         if force_reset:
             await session.execute(delete(OutcomeMeasurement))
             await session.execute(delete(DecisionRecord))
@@ -27,49 +29,63 @@ class ScenarioSimulator:
             await session.execute(delete(MetricRecord))
             await session.execute(delete(AdSetCreative))
             await session.execute(delete(Campaign))
-            await session.execute(delete(ProductSKU))
+            # Delete only baseline SKUs on reset, preserving custom user-created SKUs!
+            await session.execute(delete(ProductSKU).where(ProductSKU.id.in_(BASELINE_SKU_IDS), ProductSKU.is_deleted != True))
             await session.execute(delete(AuditLogRecord))
             await session.commit()
         else:
-            res = await session.execute(select(ProductSKU))
+            res = await session.execute(select(ProductSKU).where(ProductSKU.id == "sku_lumen_serum"))
             if res.scalars().first():
                 return
 
-        # 1. Product SKUs
-        sku1 = ProductSKU(
-            id="sku_lumen_serum",
-            sku="HERO-LUMEN-SERUM",
-            name="Lumen Vitamin C Brightening Serum (30ml)",
-            retail_price=68.0,
-            cogs=14.5,
-            shipping_cost=5.2,
-            inventory_stock=380,  # Healthy baseline (380 units / 14 per day = 27 days runout)
-            sales_velocity_7d=14.0,
-            contribution_margin_pct=0.71
-        )
-        sku2 = ProductSKU(
-            id="sku_hydra_cream",
-            sku="HYDRA-BARRIER-CREAM",
-            name="Ceramide Deep Moisture Barrier Cream (50ml)",
-            retail_price=54.0,
-            cogs=11.0,
-            shipping_cost=4.8,
-            inventory_stock=420,
-            sales_velocity_7d=9.5,
-            contribution_margin_pct=0.70
-        )
-        sku3 = ProductSKU(
-            id="sku_spf_drops",
-            sku="GLOW-SPF-DROPS",
-            name="Glow Invisible Daily SPF 50+ (50ml)",
-            retail_price=42.0,
-            cogs=8.2,
-            shipping_cost=4.5,
-            inventory_stock=650,
-            sales_velocity_7d=18.0,
-            contribution_margin_pct=0.70
-        )
-        session.add_all([sku1, sku2, sku3])
+        # Check which baseline SKUs were marked deleted
+        deleted_res = await session.execute(select(ProductSKU.id).where(ProductSKU.id.in_(BASELINE_SKU_IDS), ProductSKU.is_deleted == True))
+        deleted_ids = set(deleted_res.scalars().all())
+
+        # 1. Baseline Product SKUs (Recreated or updated to deterministic defaults if not deleted by user)
+        skus_to_add = []
+        if "sku_lumen_serum" not in deleted_ids:
+            skus_to_add.append(ProductSKU(
+                id="sku_lumen_serum",
+                sku="HERO-LUMEN-SERUM",
+                name="Lumen Vitamin C Brightening Serum (30ml)",
+                retail_price=68.0,
+                cogs=14.5,
+                shipping_cost=5.2,
+                inventory_stock=380,  # Healthy baseline (380 units / 14 per day = 27 days runout)
+                sales_velocity_7d=14.0,
+                contribution_margin_pct=0.71,
+                is_deleted=False
+            ))
+        if "sku_hydra_cream" not in deleted_ids:
+            skus_to_add.append(ProductSKU(
+                id="sku_hydra_cream",
+                sku="HYDRA-BARRIER-CREAM",
+                name="Ceramide Deep Moisture Barrier Cream (50ml)",
+                retail_price=54.0,
+                cogs=11.0,
+                shipping_cost=4.8,
+                inventory_stock=420,
+                sales_velocity_7d=9.5,
+                contribution_margin_pct=0.70,
+                is_deleted=False
+            ))
+        if "sku_spf_drops" not in deleted_ids:
+            skus_to_add.append(ProductSKU(
+                id="sku_spf_drops",
+                sku="GLOW-SPF-DROPS",
+                name="Glow Invisible Daily SPF 50+ (50ml)",
+                retail_price=42.0,
+                cogs=8.2,
+                shipping_cost=4.5,
+                inventory_stock=650,
+                sales_velocity_7d=18.0,
+                contribution_margin_pct=0.70,
+                is_deleted=False
+            ))
+
+        if skus_to_add:
+            session.add_all(skus_to_add)
 
         # 2. Campaigns
         c_meta_hero = Campaign(

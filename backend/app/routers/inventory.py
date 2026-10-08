@@ -31,7 +31,9 @@ class CreateSKUPayload(BaseModel):
 @router.get("")
 async def get_all_inventory(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
     """Returns comprehensive real-time SKU stock details, runout hazards, economics, and linked campaigns."""
-    res = await db.execute(select(ProductSKU).order_by(ProductSKU.sku.asc()))
+    res = await db.execute(
+        select(ProductSKU).where(ProductSKU.is_deleted != True).order_by(ProductSKU.sku.asc())
+    )
     skus = res.scalars().all()
 
     camps_res = await db.execute(select(Campaign))
@@ -191,3 +193,165 @@ async def adjust_sku_velocity(sku_id: str, payload: UpdateVelocityPayload, db: A
         "sales_velocity_7d": sku.sales_velocity_7d,
         "new_runout_days": sku.inventory_runout_days
     }
+
+@router.post("")
+async def create_new_sku(payload: CreateSKUPayload, db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
+    """Adds a new stock item/product SKU to inventory with automatic contribution margin calculation."""
+    clean_sku = payload.sku.strip().upper()
+    if not clean_sku:
+        raise HTTPException(status_code=400, detail="SKU code is required")
+    if not payload.name.strip():
+        raise HTTPException(status_code=400, detail="Product name is required")
+    if payload.retail_price <= 0:
+        raise HTTPException(status_code=400, detail="Retail price must be greater than 0")
+    if payload.cogs < 0:
+        raise HTTPException(status_code=400, detail="COGS cannot be negative")
+
+    # Check if SKU code already exists; if so, update stock & economics gracefully
+    existing_res = await db.execute(select(ProductSKU).where(ProductSKU.sku == clean_sku))
+    existing_item = existing_res.scalars().first()
+
+    # Calculate contribution margin percentage: (Price - COGS - Shipping) / Price
+    margin_pct = (payload.retail_price - payload.cogs - payload.shipping_cost) / payload.retail_price
+    margin_pct = max(0.0, min(1.0, margin_pct))
+
+    if existing_item:
+        old_stock = existing_item.inventory_stock
+        existing_item.name = payload.name.strip()
+        existing_item.retail_price = round(payload.retail_price, 2)
+        existing_item.cogs = round(payload.cogs, 2)
+        existing_item.shipping_cost = round(payload.shipping_cost, 2)
+        existing_item.inventory_stock = max(0, payload.inventory_stock)
+        existing_item.sales_velocity_7d = max(0.1, payload.sales_velocity_7d)
+        existing_item.contribution_margin_pct = round(margin_pct, 4)
+
+        audit = AuditLogRecord(
+            id=str(uuid.uuid4()),
+            timestamp=datetime.utcnow(),
+            actor="OPERATOR_WAREHOUSE",
+            action="UPDATE_INVENTORY_SKU",
+            entity_type="PRODUCT_SKU",
+            entity_id=existing_item.id,
+            details={
+                "sku": existing_item.sku,
+                "name": existing_item.name,
+                "old_stock": old_stock,
+                "new_stock": existing_item.inventory_stock,
+                "price": existing_item.retail_price,
+                "margin_pct": existing_item.contribution_margin_pct
+            },
+            notes=f"Updated inventory for existing SKU '{existing_item.sku}' to {existing_item.inventory_stock} units."
+        )
+        db.add(audit)
+        await db.commit()
+
+        return {
+            "success": True,
+            "sku": {
+                "id": existing_item.id,
+                "sku": existing_item.sku,
+                "name": existing_item.name,
+                "retail_price": existing_item.retail_price,
+                "cogs": existing_item.cogs,
+                "shipping_cost": existing_item.shipping_cost,
+                "inventory_stock": existing_item.inventory_stock,
+                "sales_velocity_7d": existing_item.sales_velocity_7d,
+                "runout_days": existing_item.inventory_runout_days,
+                "contribution_margin_pct": round(existing_item.contribution_margin_pct * 100, 1)
+            },
+            "message": f"Updated existing stock for {existing_item.sku} to {existing_item.inventory_stock} units!"
+        }
+
+    new_item = ProductSKU(
+        id=f"sku_{clean_sku.lower().replace('-', '_').replace(' ', '_')}_{str(uuid.uuid4())[:6]}",
+        sku=clean_sku,
+        name=payload.name.strip(),
+        retail_price=round(payload.retail_price, 2),
+        cogs=round(payload.cogs, 2),
+        shipping_cost=round(payload.shipping_cost, 2),
+        inventory_stock=max(0, payload.inventory_stock),
+        sales_velocity_7d=max(0.1, payload.sales_velocity_7d),
+        contribution_margin_pct=round(margin_pct, 4),
+        created_at=datetime.utcnow()
+    )
+    db.add(new_item)
+
+    audit = AuditLogRecord(
+        id=str(uuid.uuid4()),
+        timestamp=datetime.utcnow(),
+        actor="OPERATOR_WAREHOUSE",
+        action="CREATE_INVENTORY_SKU",
+        entity_type="PRODUCT_SKU",
+        entity_id=new_item.id,
+        details={
+            "sku": new_item.sku,
+            "name": new_item.name,
+            "stock": new_item.inventory_stock,
+            "price": new_item.retail_price,
+            "cogs": new_item.cogs,
+            "margin_pct": new_item.contribution_margin_pct
+        },
+        notes=f"Created new inventory product SKU '{new_item.sku}' ({new_item.name}) with {new_item.inventory_stock} units."
+    )
+    db.add(audit)
+    await db.commit()
+
+    return {
+        "success": True,
+        "sku": {
+            "id": new_item.id,
+            "sku": new_item.sku,
+            "name": new_item.name,
+            "retail_price": new_item.retail_price,
+            "cogs": new_item.cogs,
+            "shipping_cost": new_item.shipping_cost,
+            "inventory_stock": new_item.inventory_stock,
+            "sales_velocity_7d": new_item.sales_velocity_7d,
+            "runout_days": new_item.inventory_runout_days,
+            "contribution_margin_pct": round(new_item.contribution_margin_pct * 100, 1)
+        },
+        "message": f"Successfully added {new_item.sku} to inventory!"
+    }
+
+@router.delete("/{sku_id}")
+async def delete_sku(sku_id: str, db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
+    """Permanently deletes a SKU from warehouse inventory and disassociates linked campaigns/records."""
+    res = await db.execute(select(ProductSKU).where((ProductSKU.id == sku_id) | (ProductSKU.sku == sku_id.upper())))
+    sku = res.scalars().first()
+    if not sku:
+        raise HTTPException(status_code=404, detail="SKU item not found in inventory")
+
+    sku_code = sku.sku
+    sku_name = sku.name
+
+    # Disassociate linked campaigns to maintain relational integrity
+    camps_res = await db.execute(select(Campaign).where(Campaign.target_sku_id == sku.id))
+    for camp in camps_res.scalars().all():
+        camp.target_sku_id = None
+
+    # Audit log entry for deletion
+    audit = AuditLogRecord(
+        id=str(uuid.uuid4()),
+        timestamp=datetime.utcnow(),
+        actor="OPERATOR_WAREHOUSE",
+        action="DELETE_INVENTORY_SKU",
+        entity_type="PRODUCT_SKU",
+        entity_id=sku.id,
+        details={"sku": sku_code, "name": sku_name},
+        notes=f"Permanently deleted product SKU '{sku_code}' ({sku_name}) from inventory."
+    )
+    db.add(audit)
+
+    # Mark as permanently deleted and disassociate campaigns
+    sku.is_deleted = True
+    sku.inventory_stock = 0
+
+    await db.commit()
+
+    return {
+        "success": True,
+        "deleted_sku_id": sku_id,
+        "sku": sku_code,
+        "message": f"Product SKU '{sku_code}' has been removed from inventory."
+    }
+

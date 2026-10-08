@@ -49,6 +49,7 @@ class ProductSKU(Base):
     inventory_stock = Column(Integer, default=0)
     sales_velocity_7d = Column(Float, default=1.0) # units sold per day
     contribution_margin_pct = Column(Float, default=0.4) # (Price - COGS - Shipping) / Price
+    is_deleted = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     @property

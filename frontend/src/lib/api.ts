@@ -53,6 +53,40 @@ export async function adjustVelocity(skuId: string, salesVelocity7d: number) {
   return res.json();
 }
 
+export interface CreateSKUInput {
+  sku: string;
+  name: string;
+  retail_price: number;
+  cogs: number;
+  shipping_cost?: number;
+  inventory_stock?: number;
+  sales_velocity_7d?: number;
+}
+
+export async function createSKU(payload: CreateSKUInput) {
+  const res = await fetch(`${API_BASE}/inventory`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to add new product SKU");
+  }
+  return res.json();
+}
+
+export async function deleteSKU(skuId: string) {
+  const res = await fetch(`${API_BASE}/inventory/${skuId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to delete SKU");
+  }
+  return res.json();
+}
+
 export async function fetchDecisions(tier?: string, status?: string) {
   let url = `${API_BASE}/decisions`;
   const params = new URLSearchParams();

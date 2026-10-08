@@ -362,8 +362,8 @@ html:not(.dark) .lg-tooltip {
 .ascend-app .recharts-cartesian-axis-tick-value { font-family: var(--lg-font); }
 .ascend-app .recharts-curve.recharts-area-area { transition: d .6s cubic-bezier(.16, 1, .3, 1); }
 
-/* Modal backdrop gets real blur */
-.ascend-app .fixed.inset-0 { backdrop-filter: blur(14px) saturate(120%) !important; -webkit-backdrop-filter: blur(14px) saturate(120%) !important; }
+/* Modal backdrop blur helper */
+.ascend-app .modal-backdrop-dim { backdrop-filter: blur(14px) saturate(120%) !important; -webkit-backdrop-filter: blur(14px) saturate(120%) !important; }
 
 /* Scrollbar */
 .dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1) !important; }
